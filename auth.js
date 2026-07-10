@@ -128,6 +128,12 @@ function getUserEmail() {
   return _profile ? _profile.email : '';
 }
 
+// Matric no = local part of the UiTM email (e.g. 2020388517@student.uitm.edu.my)
+function getStudentId() {
+  const email = getUserEmail();
+  return email ? email.split('@')[0] : '';
+}
+
 // ─── Shared button loading spinner ─────────────────────────────────────────────
 
 (function injectBtnSpinnerCSS() {

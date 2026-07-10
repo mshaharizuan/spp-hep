@@ -103,20 +103,24 @@ function submitParticipation(pid, profile, email, verifiedName) {
     );
 
     if (existingProfileIdx === -1) {
-      // New student — profile data is required.
-      // Name is taken from the verified token, never from the client payload.
-      if (!profile || !profile.student_id || !profile.faculty || !profile.semester) {
-        throw new Error('Profil pelajar diperlukan untuk pendaftaran pertama');
+      // New student — only faculty & semester come from the form.
+      // Name and matric are derived from the VERIFIED identity, never the client payload.
+      if (!profile || !profile.faculty || !profile.semester) {
+        throw new Error('Sila pilih fakulti dan semester');
       }
       if (!verifiedName) throw new Error('Nama tidak dapat disahkan dari akaun Google');
       validateProfile(profile);
 
+      // Matric no = local part of the verified UiTM email
+      // e.g. 2020388517@student.uitm.edu.my → 2020388517
+      const studentId = email.split('@')[0];
+
       profileSheet.appendRow([
         sanitizeCell(email),
-        sanitizeCell(truncate(profile.student_id)),
+        sanitizeCell(truncate(studentId)),     // derived from verified email
         sanitizeCell(truncate(verifiedName)),  // from verified token, not client
-        sanitizeCell(profile.faculty),         // already validated against whitelist
-        sanitizeCell(profile.semester),        // already validated against whitelist
+        sanitizeCell(profile.faculty),         // validated against whitelist
+        sanitizeCell(profile.semester),        // validated against whitelist
         new Date(),
       ]);
     }
@@ -153,9 +157,7 @@ function validateProfile(profile) {
   if (!SEMESTER_WHITELIST.includes(profile.semester)) {
     throw new Error('Semester tidak sah');
   }
-  if (!profile.student_id || !/^\d{9,12}$/.test(profile.student_id)) {
-    throw new Error('No matrik tidak sah');
-  }
+  // Matric no is derived server-side from the verified email — not validated from client input.
 }
 
 function formatDate(date) {

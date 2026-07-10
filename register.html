@@ -347,7 +347,11 @@
 
         <div class="field">
           <label for="f-studentid">No. Matrik</label>
-          <input type="text" id="f-studentid" placeholder="cth: 2022123456" maxlength="12" inputmode="numeric">
+          <input type="text" id="f-studentid" maxlength="12" readonly>
+          <div class="field-hint">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Diambil automatik dari emel UiTM anda
+          </div>
         </div>
 
         <div class="field">
@@ -542,7 +546,8 @@
         document.getElementById('ps-semester').textContent = profile.semester;
         document.getElementById('section-returning').style.display = 'block';
       } else {
-        // Auto-isi nama penuh dari akaun Google (readonly)
+        // Auto-isi no. matrik & nama dari akaun Google (readonly)
+        document.getElementById('f-studentid').value = getStudentId();
         document.getElementById('f-name').value = getUserName();
         document.getElementById('section-firsttime').style.display = 'block';
       }
