@@ -27,9 +27,10 @@ function doPost(e) {
     const action = payload.action;
 
     switch (action) {
-      case 'getProgram':    return jsonResponse(getProgram(payload.pid, user.email));
-      case 'getMyProfile':  return jsonResponse(getMyProfile(user.email));
-      case 'getKPI':        return jsonResponse(getKPI(user.email));
+      case 'getProgram':        return jsonResponse(getProgram(payload.pid, user.email));
+      case 'getActivePrograms': return jsonResponse(getActivePrograms(user.email));
+      case 'getMyProfile':      return jsonResponse(getMyProfile(user.email));
+      case 'getKPI':            return jsonResponse(getKPI(user.email));
 
       case 'submitParticipation':
         // Name comes from the verified token, NOT the client payload

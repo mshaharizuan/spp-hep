@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Program Aktif · UiTM HEP</title>
+  <script src="auth.js"></script>
+  <script src="https://accounts.google.com/gsi/client" onload="initGIS()" async defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand: #6d1f6e;
+      --brand-2: #9b2d8f;
+      --brand-deep: #4a1350;
+      --accent: #f0a500;
+      --ink: #1c1526;
+      --muted: #6b6478;
+      --line: #ece7f0;
+      --ok: #1a8a52;
+      --ok-bg: #e7f7ee;
+      --err: #c0392b;
+      --err-bg: #fdecec;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      background:
+        radial-gradient(1000px 500px at 100% -5%, rgba(155,45,143,0.10), transparent 55%),
+        radial-gradient(800px 400px at -5% 0%, rgba(240,165,0,0.08), transparent 50%),
+        #f4f1f7;
+    }
+
+    /* Brand hero */
+    .hero {
+      background: linear-gradient(135deg, var(--brand-deep), var(--brand-2));
+      color: #fff;
+      padding: 2rem 1.5rem 2.6rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: ""; position: absolute; right: -60px; top: -60px;
+      width: 220px; height: 220px;
+      background: radial-gradient(circle, rgba(240,165,0,0.30), transparent 70%);
+    }
+    .hero-inner { max-width: 720px; margin: 0 auto; position: relative; z-index: 1; }
+    .brand-row { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1.2rem; }
+    .brand-mark {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.25);
+      display: grid; place-items: center; font-weight: 800; font-size: 0.85rem;
+    }
+    .brand-name { font-weight: 700; font-size: 0.85rem; letter-spacing: 0.4px; }
+    .brand-sub { font-size: 0.72rem; opacity: 0.8; }
+    .hero h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.35rem; }
+    .hero p { font-size: 0.9rem; opacity: 0.85; font-weight: 500; }
+
+    .container { max-width: 720px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; margin: 1.5rem 0 1rem; flex-wrap: wrap;
+    }
+    .toolbar .count { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+    .acct {
+      font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .acct a { color: var(--brand-2); font-weight: 700; text-decoration: none; }
+    .acct a:hover { text-decoration: underline; }
+
+    /* Program cards */
+    .prog-list { display: grid; gap: 1rem; }
+    .prog-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent);
+      border-radius: 15px;
+      padding: 1.2rem 1.35rem;
+      box-shadow: 0 12px 30px -22px rgba(30,5,40,0.3);
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      flex-wrap: wrap;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .prog-card:hover { transform: translateY(-2px); box-shadow: 0 18px 36px -22px rgba(30,5,40,0.4); }
+    .prog-info { flex: 1; min-width: 200px; }
+    .prog-name { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 0.5rem; }
+    .prog-meta { display: flex; flex-direction: column; gap: 0.35rem; }
+    .prog-meta .row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--muted); font-weight: 500; }
+    .prog-meta svg { flex: none; opacity: 0.7; }
+
+    .prog-action { flex: none; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.7rem 1.3rem;
+      background: linear-gradient(135deg, var(--brand-2), var(--brand));
+      color: #fff; text-decoration: none;
+      border-radius: 11px; font-size: 0.88rem; font-weight: 700;
+      box-shadow: 0 10px 22px -12px rgba(109,31,110,0.7);
+      transition: transform 0.15s, filter 0.15s;
+    }
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+
+    .badge-done {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.5rem 0.9rem; border-radius: 99px;
+      background: var(--ok-bg); color: var(--ok);
+      font-size: 0.8rem; font-weight: 700;
+    }
+    .done-at { font-size: 0.72rem; color: var(--muted); margin-top: 0.3rem; text-align: right; }
+
+    /* States */
+    .spinner {
+      width: 34px; height: 34px; margin: 3.5rem auto;
+      border: 3px solid var(--line); border-top-color: var(--brand-2);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty, .error {
+      text-align: center; padding: 3rem 1.5rem; color: var(--muted);
+      background: #fff; border: 1px solid var(--line); border-radius: 15px; margin-top: 1rem;
+    }
+    .empty svg { color: var(--brand-2); opacity: 0.5; margin-bottom: 0.75rem; }
+    .empty h3 { color: var(--ink); font-size: 1.05rem; margin-bottom: 0.35rem; }
+    .empty p { font-size: 0.88rem; }
+    .error { color: var(--err); }
+
+    /* Auth wall */
+    #auth-wall {
+      position: fixed; inset: 0; z-index: 1000;
+      display: none; align-items: center; justify-content: center; padding: 1.25rem;
+      background: rgba(28,10,34,0.55); backdrop-filter: blur(6px);
+    }
+    .auth-box {
+      background: #fff; border-radius: 20px; padding: 2.2rem 2rem; text-align: center;
+      box-shadow: 0 30px 70px -25px rgba(30,5,40,0.6); max-width: 340px; width: 100%;
+    }
+    .auth-mark {
+      width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 1.1rem;
+      background: linear-gradient(135deg, var(--brand-deep), var(--brand-2));
+      display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 1.1rem;
+    }
+    .auth-box h2 { font-size: 1.15rem; font-weight: 800; margin-bottom: 0.45rem; }
+    .auth-box p { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.35rem; line-height: 1.55; }
+    #gsi-btn { display: flex; justify-content: center; }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="brand-row">
+      <div class="brand-mark">UiTM</div>
+      <div>
+        <div class="brand-name">Hal Ehwal Pelajar</div>
+        <div class="brand-sub">Penglibatan Pelajar</div>
+      </div>
+    </div>
+    <h1>Program Aktif</h1>
+    <p>Pilih program di bawah untuk merekod kehadiran anda.</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="toolbar">
+    <span class="count" id="count"></span>
+    <span class="acct">
+      <span id="acct-email"></span>
+      <a href="#" onclick="switchUser(); return false;">Tukar akaun</a>
+    </span>
+  </div>
+
+  <div id="content">
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<div id="auth-wall">
+  <div class="auth-box">
+    <div class="auth-mark">UiTM</div>
+    <h2>Log Masuk Diperlukan</h2>
+    <p>Gunakan akaun Google UiTM anda untuk melihat senarai program.</p>
+    <div id="gsi-btn"></div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://script.google.com/macros/s/AKfycbxfVUFnpLxR51o_Xfg0DTiyvrHi5AmDMwwWSeEbAh0ztZgsuarguQ5-bwz5Oki1027vAw/exec';
+
+  async function apiCall(params) {
+    const res = await fetch(API, {
+      method: 'POST',
+      body: JSON.stringify({ ...params, idToken: getAuthToken() }),
+      redirect: 'follow',
+    });
+    return res.json();
+  }
+
+  const CAL_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+  const ORG_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>';
+
+  async function init() {
+    document.getElementById('acct-email').textContent = getUserEmail();
+
+    try {
+      const res = await apiCall({ action: 'getActivePrograms' });
+      const content = document.getElementById('content');
+
+      if (!res.ok) {
+        content.innerHTML = '';
+        const err = document.createElement('div');
+        err.className = 'error';
+        err.textContent = res.error;   // textContent — XSS safe
+        content.appendChild(err);
+        return;
+      }
+
+      const programs = res.data;
+      document.getElementById('count').textContent = programs.length + ' program aktif';
+
+      if (!programs.length) {
+        content.innerHTML =
+          '<div class="empty">' +
+          '<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' +
+          '<h3>Tiada program aktif</h3>' +
+          '<p>Belum ada program dibuka buat masa ini. Sila semak semula kemudian.</p>' +
+          '</div>';
+        return;
+      }
+
+      content.innerHTML = '';
+      const list = document.createElement('div');
+      list.className = 'prog-list';
+
+      programs.forEach(prog => {
+        const card = document.createElement('div');
+        card.className = 'prog-card';
+
+        // Info
+        const info = document.createElement('div');
+        info.className = 'prog-info';
+
+        const name = document.createElement('div');
+        name.className = 'prog-name';
+        name.textContent = prog.name;   // textContent — XSS safe
+
+        const meta = document.createElement('div');
+        meta.className = 'prog-meta';
+
+        const dateRow = document.createElement('div');
+        dateRow.className = 'row';
+        dateRow.innerHTML = CAL_SVG;
+        const dateSpan = document.createElement('span');
+        dateSpan.textContent = prog.date;
+        dateRow.appendChild(dateSpan);
+
+        const orgRow = document.createElement('div');
+        orgRow.className = 'row';
+        orgRow.innerHTML = ORG_SVG;
+        const orgSpan = document.createElement('span');
+        orgSpan.textContent = prog.organizer;
+        orgRow.appendChild(orgSpan);
+
+        meta.appendChild(dateRow);
+        meta.appendChild(orgRow);
+        info.appendChild(name);
+        info.appendChild(meta);
+
+        // Action
+        const action = document.createElement('div');
+        action.className = 'prog-action';
+
+        if (prog.alreadyRegistered) {
+          const wrap = document.createElement('div');
+          const badge = document.createElement('span');
+          badge.className = 'badge-done';
+          badge.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>';
+          const badgeText = document.createElement('span');
+          badgeText.textContent = 'Telah Berdaftar';
+          badge.appendChild(badgeText);
+          wrap.appendChild(badge);
+
+          if (prog.registeredAt) {
+            const at = document.createElement('div');
+            at.className = 'done-at';
+            at.textContent = prog.registeredAt;
+            wrap.appendChild(at);
+          }
+          action.appendChild(wrap);
+        } else {
+          const btn = document.createElement('a');
+          btn.className = 'btn';
+          btn.href = 'register.html?pid=' + encodeURIComponent(prog.pid);
+          btn.innerHTML = 'Daftar Kehadiran <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+          action.appendChild(btn);
+        }
+
+        card.appendChild(info);
+        card.appendChild(action);
+        list.appendChild(card);
+      });
+
+      content.appendChild(list);
+
+    } catch (err) {
+      document.getElementById('content').innerHTML =
+        '<div class="error">Ralat sambungan. Sila cuba semula.</div>';
+    }
+  }
+
+  requireAuth(init);
+</script>
+</body>
+</html>

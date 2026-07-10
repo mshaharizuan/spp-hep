@@ -35,6 +35,39 @@ function getProgram(pid, email) {
   };
 }
 
+// Lists all OPEN programs for the student landing page.
+// Includes only the caller's OWN registration status — never other registrants.
+function getActivePrograms(email) {
+  const programs = sheetToObjects('Programs');
+
+  const myPids = {};
+  if (email) {
+    sheetToObjects('Participation').forEach(r => {
+      if (r.student_email && r.student_email.toLowerCase() === email.toLowerCase()) {
+        myPids[r.pid] = formatDate(r.timestamp);
+      }
+    });
+  }
+
+  return programs
+    .filter(p => p.status === 'open')
+    .map(p => ({
+      pid: p.pid,
+      name: p.name,
+      date: p.date,
+      organizer: p.organizer,
+      alreadyRegistered: !!myPids[p.pid],
+      registeredAt: myPids[p.pid] || null,
+    }))
+    .sort((a, b) => {
+      const da = toDate(a.date), db = toDate(b.date);
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return da - db; // soonest first
+    });
+}
+
 function getMyProfile(email) {
   const profiles = sheetToObjects('StudentProfiles');
   const profile = profiles.find(p => p.student_email && p.student_email.toLowerCase() === email.toLowerCase());
