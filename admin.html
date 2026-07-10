@@ -383,7 +383,7 @@
         return;
       }
 
-      const programs = res.data.programs;
+      const programs = res.data.all ? res.data.all.programs : res.data.programs;
 
       if (!programs || programs.length === 0) {
         list.innerHTML = '<div class="empty">Tiada program lagi.</div>';

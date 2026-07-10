@@ -47,6 +47,8 @@ function closeProgram(pid, email) {
   return { pid, status: 'closed' };
 }
 
+const MS_LABELS = ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogo','Sep','Okt','Nov','Dis'];
+
 function getKPI(email) {
   requireModerator(email);
 
@@ -55,99 +57,115 @@ function getKPI(email) {
   const programs = sheetToObjects('Programs');
   const totalPopulation = Number(getConfigValue('total_population')) || 1;
 
-  // KPI 1: unique students / total population
-  const uniqueEmails = [...new Set(
-    participation.map(r => r.student_email).filter(Boolean).map(e => e.toLowerCase())
-  )];
-  const uniqueCount = uniqueEmails.length;
-  const kpi1 = ((uniqueCount / totalPopulation) * 100).toFixed(2);
-
-  // KPI 2: % of participating students who joined ≥2 programs
-  const emailProgramCount = {};
-  participation.forEach(r => {
-    if (!r.student_email) return;
-    const e = r.student_email.toLowerCase();
-    emailProgramCount[e] = (emailProgramCount[e] || 0) + 1;
-  });
-  const multiParticipants = Object.values(emailProgramCount).filter(c => c >= 2).length;
-  const kpi2 = uniqueCount > 0
-    ? ((multiParticipants / uniqueCount) * 100).toFixed(2)
-    : '0.00';
-
-  // Breakdown by faculty
   const profileMap = {};
   profiles.forEach(p => {
     if (p.student_email) profileMap[p.student_email.toLowerCase()] = p;
   });
 
-  const facultyCount = {};
-  const semesterCount = {};
-  uniqueEmails.forEach(e => {
-    const p = profileMap[e];
-    if (!p) return;
-    facultyCount[p.faculty] = (facultyCount[p.faculty] || 0) + 1;
-    semesterCount[p.semester] = (semesterCount[p.semester] || 0) + 1;
+  const programMap = {};
+  programs.forEach(p => { programMap[p.pid] = p; });
+
+  // Attach a resolved year/month to each participation (by program date, fallback timestamp)
+  const records = participation.map(r => {
+    const prog = programMap[r.pid];
+    const d = (prog && toDate(prog.date)) || toDate(r.timestamp);
+    return {
+      email: r.student_email ? r.student_email.toLowerCase() : '',
+      pid: r.pid,
+      year: d ? d.getFullYear() : null,
+      monthKey: d ? d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) : null,
+    };
   });
 
-  const toBreakdown = (counts) =>
-    Object.entries(counts)
-      .map(([label, count]) => ({
-        label,
-        count,
-        pct: ((count / uniqueCount) * 100).toFixed(2),
-      }))
-      .sort((a, b) => b.count - a.count);
+  const years = [...new Set(records.map(r => r.year).filter(y => y !== null))].sort();
 
-  // Per-program summary (count only, no email list)
-  const programCounts = programs.map(prog => {
-    const count = participation.filter(r => r.pid === prog.pid).length;
+  // Year overview chart (always across all years)
+  const yearBreakdown = years.map(y => {
+    const count = records.filter(r => r.year === y).length;
     return {
+      label: String(y),
+      count,
+      pct: records.length ? ((count / records.length) * 100).toFixed(2) : '0.00',
+    };
+  });
+
+  // Compute full stats for a subset of records + their programs
+  function computeStats(recs, progs) {
+    const uniqueEmails = [...new Set(recs.map(r => r.email).filter(Boolean))];
+    const uniqueCount = uniqueEmails.length;
+    const kpi1 = ((uniqueCount / totalPopulation) * 100).toFixed(2);
+
+    const emailProgramCount = {};
+    recs.forEach(r => {
+      if (r.email) emailProgramCount[r.email] = (emailProgramCount[r.email] || 0) + 1;
+    });
+    const multi = Object.values(emailProgramCount).filter(c => c >= 2).length;
+    const kpi2 = uniqueCount > 0 ? ((multi / uniqueCount) * 100).toFixed(2) : '0.00';
+
+    const facultyCount = {};
+    const semesterCount = {};
+    uniqueEmails.forEach(e => {
+      const p = profileMap[e];
+      if (!p) return;
+      facultyCount[p.faculty] = (facultyCount[p.faculty] || 0) + 1;
+      semesterCount[p.semester] = (semesterCount[p.semester] || 0) + 1;
+    });
+
+    const monthCount = {};
+    recs.forEach(r => {
+      if (r.monthKey) monthCount[r.monthKey] = (monthCount[r.monthKey] || 0) + 1;
+    });
+
+    const toBreakdown = (counts) =>
+      Object.entries(counts)
+        .map(([label, count]) => ({
+          label,
+          count,
+          pct: uniqueCount ? ((count / uniqueCount) * 100).toFixed(2) : '0.00',
+        }))
+        .sort((a, b) => b.count - a.count);
+
+    const monthBreakdown = Object.keys(monthCount).sort().map(key => {
+      const parts = key.split('-');
+      return { label: MS_LABELS[parseInt(parts[1], 10) - 1] + ' ' + parts[0], count: monthCount[key] };
+    });
+
+    const programCounts = progs.map(prog => ({
       pid: prog.pid,
       name: prog.name,
       date: prog.date,
       organizer: prog.organizer,
       status: prog.status,
-      participantCount: count,
+      participantCount: recs.filter(r => r.pid === prog.pid).length,
+    }));
+
+    return {
+      kpi1: { value: kpi1, uniqueStudents: uniqueCount, totalPopulation },
+      kpi2: { value: kpi2, multiParticipants: multi, totalParticipating: uniqueCount },
+      totalParticipations: recs.length,
+      facultyBreakdown: toBreakdown(facultyCount),
+      semesterBreakdown: toBreakdown(semesterCount),
+      monthBreakdown,
+      programs: programCounts,
     };
-  });
+  }
 
-  // ── Time breakdown (by program date, fallback to participation timestamp) ──
-  const programDateMap = {};
-  programs.forEach(p => { programDateMap[p.pid] = toDate(p.date); });
+  const all = computeStats(records, programs);
 
-  const MS = ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogo','Sep','Okt','Nov','Dis'];
-  const yearCount = {};
-  const monthCount = {};
-  participation.forEach(r => {
-    const d = programDateMap[r.pid] || toDate(r.timestamp);
-    if (!d) return;
-    const y = d.getFullYear();
-    yearCount[y] = (yearCount[y] || 0) + 1;
-    const key = y + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
-    monthCount[key] = (monthCount[key] || 0) + 1;
-  });
-
-  const totalParticipations = participation.length;
-
-  const yearBreakdown = Object.keys(yearCount).sort().map(y => ({
-    label: String(y),
-    count: yearCount[y],
-    pct: totalParticipations ? ((yearCount[y] / totalParticipations) * 100).toFixed(2) : '0.00',
-  }));
-
-  const monthBreakdown = Object.keys(monthCount).sort().map(key => {
-    const parts = key.split('-');
-    return { label: MS[parseInt(parts[1], 10) - 1] + ' ' + parts[0], count: monthCount[key] };
+  const byYear = {};
+  years.forEach(y => {
+    const recs = records.filter(r => r.year === y);
+    const progs = programs.filter(p => {
+      const d = toDate(p.date);
+      return d && d.getFullYear() === y;
+    });
+    byYear[y] = computeStats(recs, progs);
   });
 
   return {
-    kpi1: { value: kpi1, uniqueStudents: uniqueCount, totalPopulation },
-    kpi2: { value: kpi2, multiParticipants, totalParticipating: uniqueCount },
-    totalParticipations,
-    facultyBreakdown: toBreakdown(facultyCount),
-    semesterBreakdown: toBreakdown(semesterCount),
+    years,
     yearBreakdown,
-    monthBreakdown,
-    programs: programCounts,
+    all,
+    byYear,
   };
 }

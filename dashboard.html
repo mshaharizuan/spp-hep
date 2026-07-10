@@ -189,6 +189,20 @@
     }
     .section-title { font-size: 0.95rem; font-weight: 800; display: flex; align-items: center; gap: 0.55rem; }
     .section-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
+
+    .filter-bar {
+      display: flex; align-items: center; gap: 0.75rem;
+      background: #fff; border: 1px solid var(--line); border-radius: 14px;
+      padding: 0.85rem 1.1rem; margin-bottom: 1.35rem;
+      box-shadow: 0 12px 30px -22px rgba(30,5,40,0.25);
+    }
+    .filter-bar label { font-size: 0.8rem; font-weight: 700; color: var(--ink); }
+    .filter-bar select {
+      font-family: inherit; font-size: 0.88rem; font-weight: 600; color: var(--ink);
+      padding: 0.5rem 0.8rem; border: 1.5px solid var(--line); border-radius: 10px;
+      background: #fff; cursor: pointer; transition: border-color 0.15s;
+    }
+    .filter-bar select:focus { outline: none; border-color: var(--brand-2); }
   </style>
 </head>
 <body>
@@ -251,8 +265,24 @@
     }
   }
 
+  let activeYear = 'all';
+
+  function currentStats() {
+    if (activeYear === 'all') return kpiData.all;
+    return kpiData.byYear[activeYear] || kpiData.all;
+  }
+
   function render(d) {
+    const yearOptions = ['<option value="all">Semua Tahun</option>']
+      .concat((d.years || []).map(y => `<option value="${y}">${y}</option>`))
+      .join('');
+
     const html = `
+      <div class="filter-bar">
+        <label for="year-filter" style="margin:0">Tapis mengikut tahun</label>
+        <select id="year-filter" onchange="onYearChange(this.value)">${yearOptions}</select>
+      </div>
+
       <div class="kpi-grid" id="kpi-grid"></div>
 
       <div class="card" style="margin-bottom:1.35rem">
@@ -279,7 +309,7 @@
         <div class="card">
           <div class="section-header">
             <span class="section-title"><span class="dot"></span>Senarai Program</span>
-            <span style="font-size:0.8rem;color:var(--muted);font-weight:600">${d.programs.length} program</span>
+            <span id="prog-count" style="font-size:0.8rem;color:var(--muted);font-weight:600"></span>
           </div>
           <div id="programs-table"></div>
         </div>
@@ -287,13 +317,27 @@
     `;
 
     document.getElementById('main-content').innerHTML = html;
+    document.getElementById('year-filter').value = activeYear;
 
-    renderKPICards(d);
-    renderChart('chart-month', d.monthBreakdown, 'Penyertaan', 'line');
+    // Year chart is always across all years (context)
     renderChart('chart-year', d.yearBreakdown, 'Penyertaan', 'bar');
-    renderChart('chart-faculty', d.facultyBreakdown, 'Pelajar', 'bar');
-    renderChart('chart-semester', d.semesterBreakdown, 'Pelajar', 'bar');
-    renderProgramsTable(d.programs);
+    renderActiveStats();
+  }
+
+  // Re-renders everything that depends on the selected year
+  function renderActiveStats() {
+    const s = currentStats();
+    renderKPICards(s);
+    renderChart('chart-month', s.monthBreakdown, 'Penyertaan', 'line');
+    renderChart('chart-faculty', s.facultyBreakdown, 'Pelajar', 'bar');
+    renderChart('chart-semester', s.semesterBreakdown, 'Pelajar', 'bar');
+    renderProgramsTable(s.programs);
+    document.getElementById('prog-count').textContent = s.programs.length + ' program';
+  }
+
+  function onYearChange(value) {
+    activeYear = value;
+    renderActiveStats();
   }
 
   function renderKPICards(d) {
@@ -480,34 +524,39 @@
       setTimeout(() => setBtnLoading(btn, false), 800);
     }
 
+    const s = currentStats();
+    const scope = activeYear === 'all' ? 'Semua Tahun' : ('Tahun ' + activeYear);
+
     const rows = [
-      ['=== KPI SUMMARY ==='],
-      ['KPI 1 - Capaian Unik (%)', kpiData.kpi1.value],
-      ['Pelajar Unik', kpiData.kpi1.uniqueStudents],
-      ['Jumlah Populasi', kpiData.kpi1.totalPopulation],
-      ['KPI 2 - Kedalaman Penglibatan (%)', kpiData.kpi2.value],
-      ['Pelajar ≥2 Program', kpiData.kpi2.multiParticipants],
-      ['Jumlah Penyertaan', kpiData.totalParticipations],
+      ['Skop Laporan', scope],
       [],
-      ['=== BREAKDOWN TAHUN ==='],
+      ['=== KPI SUMMARY ==='],
+      ['KPI 1 - Capaian Unik (%)', s.kpi1.value],
+      ['Pelajar Unik', s.kpi1.uniqueStudents],
+      ['Jumlah Populasi', s.kpi1.totalPopulation],
+      ['KPI 2 - Kedalaman Penglibatan (%)', s.kpi2.value],
+      ['Pelajar ≥2 Program', s.kpi2.multiParticipants],
+      ['Jumlah Penyertaan', s.totalParticipations],
+      [],
+      ['=== BREAKDOWN TAHUN (keseluruhan) ==='],
       ['Tahun', 'Penyertaan', '%'],
       ...kpiData.yearBreakdown.map(r => [r.label, r.count, r.pct]),
       [],
       ['=== BREAKDOWN BULAN ==='],
       ['Bulan', 'Penyertaan'],
-      ...kpiData.monthBreakdown.map(r => [r.label, r.count]),
+      ...s.monthBreakdown.map(r => [r.label, r.count]),
       [],
       ['=== BREAKDOWN FAKULTI ==='],
       ['Fakulti', 'Pelajar', '%'],
-      ...kpiData.facultyBreakdown.map(r => [r.label, r.count, r.pct]),
+      ...s.facultyBreakdown.map(r => [r.label, r.count, r.pct]),
       [],
       ['=== BREAKDOWN SEMESTER ==='],
       ['Semester', 'Pelajar', '%'],
-      ...kpiData.semesterBreakdown.map(r => [r.label, r.count, r.pct]),
+      ...s.semesterBreakdown.map(r => [r.label, r.count, r.pct]),
       [],
       ['=== PROGRAM ==='],
       ['Nama', 'Tarikh', 'Anjuran', 'Pelajar', 'Status'],
-      ...kpiData.programs.map(p => [p.name, p.date, p.organizer, p.participantCount, p.status]),
+      ...s.programs.map(p => [p.name, p.date, p.organizer, p.participantCount, p.status]),
     ];
 
     const csv = rows.map(row =>
@@ -524,7 +573,8 @@
     const a = document.createElement('a');
     a.href = url;
     const today = new Date().toISOString().slice(0, 10);
-    a.download = 'KPI_HEP_' + today + '.csv';
+    const yearTag = activeYear === 'all' ? 'SemuaTahun' : activeYear;
+    a.download = 'KPI_HEP_' + yearTag + '_' + today + '.csv';
     a.click();
     URL.revokeObjectURL(url);
   }
