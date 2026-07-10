@@ -1,11 +1,21 @@
 const GIS_CLIENT_ID = '868442661081-9379vam49io358e9s6gsrth08l653og9.apps.googleusercontent.com';
+const TOKEN_KEY = 'spp_id_token';
 
 let _token = null;
 let _profile = null;
 let _pendingCallback = null;
 
 function requireAuth(callback) {
+  // Reuse a still-valid token from a previous page load — avoids re-login on refresh
+  const stored = _restoreToken();
+  if (stored) {
+    _token = stored;
+    _profile = _decodeJwt(stored);
+    callback();
+    return;
+  }
   if (_token) { callback(); return; }
+
   _pendingCallback = callback;
   const showWall = () => {
     const wall = document.getElementById('auth-wall');
@@ -25,18 +35,24 @@ function initGIS() {
     callback: _handleCredential,
     auto_select: true,
   });
-  google.accounts.id.renderButton(document.getElementById('gsi-btn'), {
-    theme: 'outline',
-    size: 'large',
-    locale: 'ms',
-    text: 'signin_with',
-  });
+  // Already authenticated via a stored token — no need to prompt
+  if (_token) return;
+  const btnEl = document.getElementById('gsi-btn');
+  if (btnEl) {
+    google.accounts.id.renderButton(btnEl, {
+      theme: 'outline',
+      size: 'large',
+      locale: 'ms',
+      text: 'signin_with',
+    });
+  }
   google.accounts.id.prompt();
 }
 
 function _handleCredential(response) {
   _token = response.credential;
   _profile = _decodeJwt(_token);
+  try { localStorage.setItem(TOKEN_KEY, _token); } catch (e) { /* storage blocked */ }
   const wall = document.getElementById('auth-wall');
   if (wall) wall.style.display = 'none';
   if (_pendingCallback) {
@@ -44,6 +60,30 @@ function _handleCredential(response) {
     _pendingCallback = null;
     cb();
   }
+}
+
+// Returns a stored token only if it exists and is not expiring within 60s
+function _restoreToken() {
+  try {
+    const t = localStorage.getItem(TOKEN_KEY);
+    if (!t) return null;
+    const p = _decodeJwt(t);
+    if (!p || !p.exp) return null;
+    if (p.exp * 1000 < Date.now() + 60000) {
+      localStorage.removeItem(TOKEN_KEY);
+      return null;
+    }
+    return t;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Clears the session — call when the server rejects an expired token
+function clearAuth() {
+  _token = null;
+  _profile = null;
+  try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
 }
 
 // Decodes the JWT payload (client-side, for display only — server re-verifies)
