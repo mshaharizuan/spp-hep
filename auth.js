@@ -1,6 +1,7 @@
 const GIS_CLIENT_ID = '868442661081-9379vam49io358e9s6gsrth08l653og9.apps.googleusercontent.com';
 
 let _token = null;
+let _profile = null;
 let _pendingCallback = null;
 
 function requireAuth(callback) {
@@ -35,7 +36,9 @@ function initGIS() {
 
 function _handleCredential(response) {
   _token = response.credential;
-  document.getElementById('auth-wall').style.display = 'none';
+  _profile = _decodeJwt(_token);
+  const wall = document.getElementById('auth-wall');
+  if (wall) wall.style.display = 'none';
   if (_pendingCallback) {
     const cb = _pendingCallback;
     _pendingCallback = null;
@@ -43,6 +46,30 @@ function _handleCredential(response) {
   }
 }
 
+// Decodes the JWT payload (client-side, for display only — server re-verifies)
+function _decodeJwt(token) {
+  try {
+    const payload = token.split('.')[1];
+    const json = decodeURIComponent(
+      atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(json);
+  } catch (e) {
+    return null;
+  }
+}
+
 function getAuthToken() {
   return _token;
+}
+
+function getUserName() {
+  return _profile ? _profile.name : '';
+}
+
+function getUserEmail() {
+  return _profile ? _profile.email : '';
 }

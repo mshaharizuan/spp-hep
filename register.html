@@ -316,6 +316,8 @@
       if (profile.hasProfile) {
         document.getElementById('section-returning').style.display = 'block';
       } else {
+        // Auto-isi nama penuh dari akaun Google (boleh diedit)
+        document.getElementById('f-name').value = getUserName();
         document.getElementById('section-firsttime').style.display = 'block';
       }
 
