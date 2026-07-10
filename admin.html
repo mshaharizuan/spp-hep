@@ -258,18 +258,10 @@
 
   let lastQrLink = '';
 
-  async function apiGet(params) {
-    const url = new URL(API);
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-    url.searchParams.set('idToken', getAuthToken());
-    const res = await fetch(url.toString(), { redirect: 'follow' });
-    return res.json();
-  }
-
-  async function apiPost(payload) {
+  async function apiCall(params) {
     const res = await fetch(API, {
       method: 'POST',
-      body: JSON.stringify({ ...payload, idToken: getAuthToken() }),
+      body: JSON.stringify({ ...params, idToken: getAuthToken() }),
       redirect: 'follow',
     });
     return res.json();
@@ -301,7 +293,7 @@
     document.getElementById('create-alert').style.display = 'none';
 
     try {
-      const res = await apiPost({ action: 'createProgram', name, date, organizer });
+      const res = await apiCall({ action: 'createProgram', name, date, organizer });
 
       if (!res.ok) {
         showCreateAlert('error', res.error);
@@ -363,7 +355,7 @@
     list.innerHTML = '<div class="spinner">Memuatkan...</div>';
 
     try {
-      const res = await apiGet({ action: 'getKPI' });
+      const res = await apiCall({ action: 'getKPI' });
 
       if (!res.ok) {
         list.innerHTML = '<div class="alert alert-error">' + sanitizeText(res.error) + '</div>';
@@ -474,7 +466,7 @@
     btn.textContent = 'Menutup...';
 
     try {
-      const res = await apiPost({ action: 'closeProgram', pid });
+      const res = await apiCall({ action: 'closeProgram', pid });
       if (res.ok) {
         loadPrograms();
       } else {

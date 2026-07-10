@@ -268,18 +268,10 @@
     document.getElementById(btnId).disabled = state;
   }
 
-  async function apiGet(params) {
-    const url = new URL(API);
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-    url.searchParams.set('idToken', getAuthToken());
-    const res = await fetch(url.toString(), { redirect: 'follow' });
-    return res.json();
-  }
-
-  async function apiPost(payload) {
+  async function apiCall(params) {
     const res = await fetch(API, {
       method: 'POST',
-      body: JSON.stringify({ ...payload, idToken: getAuthToken() }),
+      body: JSON.stringify({ ...params, idToken: getAuthToken() }),
       redirect: 'follow',
     });
     return res.json();
@@ -301,8 +293,8 @@
     try {
       // Fetch program info and profile in parallel
       const [progRes, profileRes] = await Promise.all([
-        apiGet({ action: 'getProgram', pid: currentPid }),
-        apiGet({ action: 'getMyProfile' }),
+        apiCall({ action: 'getProgram', pid: currentPid }),
+        apiCall({ action: 'getMyProfile' }),
       ]);
 
       if (!progRes.ok) { showError(progRes.error); return; }
@@ -337,7 +329,7 @@
   async function submitExisting() {
     setDisabled('btn-register', true);
     try {
-      const res = await apiPost({ action: 'submitParticipation', pid: currentPid });
+      const res = await apiCall({ action: 'submitParticipation', pid: currentPid });
       handleSubmitResult(res);
     } catch (err) {
       showError('Ralat sambungan. Sila cuba semula.');
@@ -359,7 +351,7 @@
 
     setDisabled('btn-submit', true);
     try {
-      const res = await apiPost({
+      const res = await apiCall({
         action: 'submitParticipation',
         pid: currentPid,
         profile: { student_id: studentId, name, faculty, semester },

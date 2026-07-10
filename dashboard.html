@@ -217,10 +217,11 @@
     document.getElementById('btn-export').disabled = true;
 
     try {
-      const url = new URL(API);
-      url.searchParams.set('action', 'getKPI');
-      url.searchParams.set('idToken', getAuthToken());
-      const res = await fetch(url.toString(), { redirect: 'follow' });
+      const res = await fetch(API, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'getKPI', idToken: getAuthToken() }),
+        redirect: 'follow',
+      });
       const json = await res.json();
 
       if (!json.ok) {
