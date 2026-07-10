@@ -3,253 +3,410 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pendaftaran Program</title>
+  <title>Pendaftaran Program · UiTM HEP</title>
   <script src="auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" onload="initGIS()" async defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --brand: #6d1f6e;
+      --brand-2: #9b2d8f;
+      --brand-deep: #4a1350;
+      --accent: #f0a500;
+      --ink: #1c1526;
+      --muted: #6b6478;
+      --line: #ece7f0;
+      --bg: #f4f1f7;
+      --ok: #1a8a52;
+      --ok-bg: #e7f7ee;
+      --err: #c0392b;
+      --err-bg: #fdecec;
+      --info: #5a4e8a;
+      --info-bg: #f0edfb;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f4f8;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      color: var(--ink);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1rem;
+      padding: 1.25rem;
+      background:
+        radial-gradient(1200px 600px at 15% -10%, rgba(155,45,143,0.28), transparent 55%),
+        radial-gradient(900px 500px at 110% 10%, rgba(240,165,0,0.16), transparent 50%),
+        linear-gradient(160deg, #2a0f30 0%, #3d1642 45%, #2c1030 100%);
+      -webkit-font-smoothing: antialiased;
     }
 
     .card {
+      position: relative;
       background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.10);
-      padding: 2rem;
+      border-radius: 22px;
+      box-shadow: 0 30px 70px -25px rgba(30,5,40,0.55), 0 2px 8px rgba(0,0,0,0.04);
       width: 100%;
-      max-width: 480px;
+      max-width: 460px;
+      overflow: hidden;
+      animation: rise 0.5s cubic-bezier(0.16,1,0.3,1) both;
     }
 
-    .logo {
-      text-align: center;
-      margin-bottom: 1.5rem;
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(16px) scale(0.99); }
+      to   { opacity: 1; transform: none; }
     }
 
-    .logo span {
-      display: inline-block;
-      background: #7b2d8b;
+    /* ── Brand header strip ── */
+    .head {
+      background: linear-gradient(135deg, var(--brand-deep), var(--brand-2));
+      padding: 1.5rem 1.75rem 1.6rem;
       color: #fff;
-      font-weight: 700;
-      font-size: 0.85rem;
-      padding: 4px 12px;
-      border-radius: 6px;
-      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
     }
+    .head::after {
+      content: "";
+      position: absolute;
+      right: -40px; top: -40px;
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(240,165,0,0.35), transparent 70%);
+    }
+    .brand-row { display: flex; align-items: center; gap: 0.6rem; position: relative; z-index: 1; }
+    .brand-mark {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: rgba(255,255,255,0.16);
+      display: grid; place-items: center;
+      font-weight: 800; font-size: 0.9rem;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+    .brand-name { font-weight: 700; font-size: 0.82rem; letter-spacing: 0.5px; }
+    .brand-sub { font-size: 0.7rem; opacity: 0.75; font-weight: 500; }
 
-    h2 { font-size: 1.25rem; color: #1a1a2e; margin-bottom: 0.25rem; }
-    .meta { font-size: 0.85rem; color: #666; margin-bottom: 1.5rem; }
-    .meta span { display: block; }
+    .body { padding: 1.6rem 1.75rem 1.9rem; }
 
+    /* ── Program hero ── */
+    .prog-card {
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent);
+      border-radius: 14px;
+      padding: 1.05rem 1.15rem;
+      background: linear-gradient(180deg, #fbfafd, #fff);
+      margin-bottom: 1.4rem;
+    }
+    #prog-name { font-size: 1.22rem; font-weight: 800; line-height: 1.25; margin-bottom: 0.55rem; letter-spacing: -0.01em; }
+    .prog-meta { display: flex; flex-direction: column; gap: 0.4rem; }
+    .prog-meta .row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 500; }
+    .prog-meta svg { flex: none; opacity: 0.7; }
+
+    /* ── Form ── */
+    .field { margin-bottom: 1.05rem; }
     label {
       display: block;
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       font-weight: 600;
-      color: #333;
-      margin-bottom: 0.35rem;
+      color: var(--ink);
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.01em;
     }
-
     input, select {
       width: 100%;
-      padding: 0.6rem 0.75rem;
-      border: 1.5px solid #d1d5db;
-      border-radius: 8px;
+      padding: 0.72rem 0.85rem;
+      border: 1.5px solid var(--line);
+      border-radius: 11px;
       font-size: 0.95rem;
-      margin-bottom: 1rem;
-      transition: border-color 0.2s;
+      font-family: inherit;
+      color: var(--ink);
+      background: #fff;
+      transition: border-color 0.18s, box-shadow 0.18s;
     }
-
+    input::placeholder { color: #b3adbf; }
     input:focus, select:focus {
       outline: none;
-      border-color: #7b2d8b;
+      border-color: var(--brand-2);
+      box-shadow: 0 0 0 4px rgba(155,45,143,0.12);
     }
+    input[readonly] {
+      background: #f6f4f9;
+      color: var(--muted);
+      cursor: not-allowed;
+      border-style: dashed;
+    }
+    .field-hint { font-size: 0.72rem; color: var(--muted); margin-top: 0.3rem; display: flex; align-items: center; gap: 0.3rem; }
 
-    button {
+    /* ── Button ── */
+    button.btn {
       width: 100%;
-      padding: 0.75rem;
-      background: #7b2d8b;
+      padding: 0.85rem;
+      background: linear-gradient(135deg, var(--brand-2), var(--brand));
       color: #fff;
       border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
+      border-radius: 12px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      font-family: inherit;
       cursor: pointer;
-      transition: background 0.2s;
+      letter-spacing: 0.01em;
+      box-shadow: 0 10px 22px -10px rgba(109,31,110,0.7);
+      transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
     }
+    button.btn:hover { transform: translateY(-1px); filter: brightness(1.05); box-shadow: 0 14px 28px -10px rgba(109,31,110,0.8); }
+    button.btn:active { transform: translateY(0); }
+    button.btn:disabled { filter: grayscale(0.4) brightness(0.9); cursor: wait; transform: none; box-shadow: none; }
 
-    button:hover { background: #5e1f6e; }
-    button:disabled { background: #b39dbe; cursor: not-allowed; }
+    /* ── Alerts ── */
+    .alert {
+      padding: 0.8rem 0.95rem;
+      border-radius: 11px;
+      font-size: 0.86rem;
+      font-weight: 500;
+      line-height: 1.45;
+      margin-bottom: 1.15rem;
+      display: flex;
+      gap: 0.55rem;
+      align-items: flex-start;
+    }
+    .alert svg { flex: none; margin-top: 1px; }
+    .alert-info    { background: var(--info-bg); color: var(--info); }
+    .alert-success { background: var(--ok-bg); color: var(--ok); }
+    .alert-error   { background: var(--err-bg); color: var(--err); }
 
     .notice {
-      font-size: 0.8rem;
-      color: #666;
+      font-size: 0.74rem;
+      color: var(--muted);
       text-align: center;
-      margin-top: 1rem;
-      line-height: 1.5;
+      margin-top: 1.25rem;
+      line-height: 1.55;
+      display: flex; align-items: center; justify-content: center; gap: 0.35rem;
     }
 
-    .alert {
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      margin-bottom: 1rem;
+    .divider { border: none; border-top: 1px solid var(--line); margin: 1.3rem 0; }
+
+    /* ── Screens ── */
+    #screen-loading, #screen-program, #screen-confirm, #screen-already, #screen-error { display: none; }
+
+    .spinner-wrap { text-align: center; padding: 2.5rem 0; }
+    .spinner {
+      width: 34px; height: 34px; margin: 0 auto 0.9rem;
+      border: 3px solid var(--line);
+      border-top-color: var(--brand-2);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-text { color: var(--muted); font-size: 0.88rem; font-weight: 500; }
 
-    .alert-info    { background: #e8f4fd; color: #0c5a8a; }
-    .alert-success { background: #eafaf1; color: #1a6b3c; }
-    .alert-error   { background: #fdecea; color: #8a1c1c; }
+    /* ── Confirmation ── */
+    .confirm-wrap { text-align: center; padding: 0.5rem 0 0.25rem; }
+    .check {
+      width: 72px; height: 72px; margin: 0 auto 1.1rem;
+      border-radius: 50%;
+      background: var(--ok-bg);
+      display: grid; place-items: center;
+    }
+    .check svg { width: 38px; height: 38px; }
+    .check circle { stroke: var(--ok); stroke-width: 3; fill: none; stroke-dasharray: 166; stroke-dashoffset: 166; animation: draw 0.5s ease-out 0.15s forwards; }
+    .check path { stroke: var(--ok); stroke-width: 4; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 48; stroke-dashoffset: 48; animation: draw 0.35s ease-out 0.55s forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
 
+    .confirm-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 0.3rem; }
+    #confirm-progname { color: var(--muted); font-size: 0.9rem; font-weight: 500; margin-bottom: 1.3rem; }
+    .count-badge {
+      display: inline-flex; flex-direction: column; align-items: center;
+      background: linear-gradient(180deg, #faf6fb, #f3ecf5);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.1rem 2rem;
+      margin-bottom: 1.3rem;
+    }
+    .confirm-number {
+      font-size: 2.9rem; font-weight: 800; line-height: 1;
+      background: linear-gradient(135deg, var(--brand-2), var(--accent));
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .confirm-label { color: var(--muted); font-size: 0.8rem; font-weight: 600; margin-top: 0.35rem; letter-spacing: 0.02em; }
+
+    /* ── Auth wall ── */
     #auth-wall {
-      position: fixed; inset: 0; background: rgba(240,244,248,0.97);
-      display: none; align-items: center; justify-content: center; z-index: 1000;
+      position: fixed; inset: 0; z-index: 1000;
+      display: none; align-items: center; justify-content: center; padding: 1.25rem;
+      background: rgba(28,10,34,0.55); backdrop-filter: blur(6px);
     }
     .auth-box {
-      background: #fff; border-radius: 12px; padding: 2rem; text-align: center;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.1); max-width: 340px; width: 100%;
+      background: #fff; border-radius: 20px; padding: 2.2rem 2rem; text-align: center;
+      box-shadow: 0 30px 70px -25px rgba(30,5,40,0.6); max-width: 340px; width: 100%;
+      animation: rise 0.4s cubic-bezier(0.16,1,0.3,1) both;
     }
-    .auth-box h2 { margin-bottom: 0.5rem; color: #1a1a2e; font-size: 1.1rem; }
-    .auth-box p { color: #666; font-size: 0.85rem; margin-bottom: 1.25rem; line-height: 1.5; }
+    .auth-mark {
+      width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 1.1rem;
+      background: linear-gradient(135deg, var(--brand-deep), var(--brand-2));
+      display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 1.1rem;
+    }
+    .auth-box h2 { font-size: 1.15rem; font-weight: 800; margin-bottom: 0.45rem; }
+    .auth-box p { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.35rem; line-height: 1.55; }
     #gsi-btn { display: flex; justify-content: center; }
-
-    #screen-loading,
-    #screen-program,
-    #screen-confirm,
-    #screen-already,
-    #screen-error { display: none; }
-
-    .spinner {
-      text-align: center;
-      padding: 2rem 0;
-      color: #7b2d8b;
-      font-size: 0.95rem;
-    }
-
-    .confirm-number {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #7b2d8b;
-      text-align: center;
-      margin: 0.5rem 0;
-    }
-
-    .confirm-label {
-      text-align: center;
-      color: #555;
-      font-size: 0.9rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .divider {
-      border: none;
-      border-top: 1px solid #e5e7eb;
-      margin: 1.25rem 0;
-    }
   </style>
 </head>
 <body>
 <div class="card">
-  <div class="logo"><span>UiTM HEP</span></div>
-
-  <!-- Loading -->
-  <div id="screen-loading">
-    <div class="spinner">Memuatkan maklumat program...</div>
+  <div class="head">
+    <div class="brand-row">
+      <div class="brand-mark">UiTM</div>
+      <div>
+        <div class="brand-name">Hal Ehwal Pelajar</div>
+        <div class="brand-sub">Pendaftaran Penglibatan Pelajar</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Program info + registration form -->
-  <div id="screen-program">
-    <h2 id="prog-name"></h2>
-    <div class="meta">
-      <span id="prog-date"></span>
-      <span id="prog-organizer"></span>
-    </div>
-    <hr class="divider">
-
-    <!-- Returning student: single button -->
-    <div id="section-returning" style="display:none">
-      <p class="alert alert-info">Profil anda telah disimpan. Tekan butang di bawah untuk mendaftar kehadiran.</p>
-      <button id="btn-register" onclick="submitExisting()">Daftar Kehadiran</button>
+  <div class="body">
+    <!-- Loading -->
+    <div id="screen-loading">
+      <div class="spinner-wrap">
+        <div class="spinner"></div>
+        <div class="spinner-text">Memuatkan maklumat program…</div>
+      </div>
     </div>
 
-    <!-- First-timer: full profile form -->
-    <div id="section-firsttime" style="display:none">
-      <p class="alert alert-info">Pendaftaran pertama — sila lengkapkan profil anda.</p>
+    <!-- Program info + registration form -->
+    <div id="screen-program">
+      <div class="prog-card">
+        <h2 id="prog-name"></h2>
+        <div class="prog-meta">
+          <div class="row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <span id="prog-date"></span>
+          </div>
+          <div class="row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+            <span id="prog-organizer"></span>
+          </div>
+        </div>
+      </div>
 
-      <label for="f-studentid">No. Matrik</label>
-      <input type="text" id="f-studentid" placeholder="cth: 2022123456" maxlength="12">
+      <!-- Returning student: single button -->
+      <div id="section-returning" style="display:none">
+        <div class="alert alert-info">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <span>Profil anda telah tersimpan. Tekan butang di bawah untuk merekod kehadiran.</span>
+        </div>
+        <button class="btn" id="btn-register" onclick="submitExisting()">Daftar Kehadiran</button>
+      </div>
 
-      <label for="f-name">Nama Penuh (dari akaun UiTM)</label>
-      <input type="text" id="f-name" maxlength="100" readonly style="background:#f0f4f8; color:#555; cursor:not-allowed">
+      <!-- First-timer: full profile form -->
+      <div id="section-firsttime" style="display:none">
+        <div class="alert alert-info">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.9 4.9l2.9 2.9M16.2 16.2l2.9 2.9M2 12h4M18 12h4"/></svg>
+          <span>Pendaftaran pertama — sila lengkapkan profil anda sekali sahaja.</span>
+        </div>
 
-      <label for="f-faculty">Fakulti</label>
-      <select id="f-faculty">
-        <option value="">-- Pilih Fakulti --</option>
-        <option>Fakulti Perakaunan</option>
-        <option>Fakulti Pengurusan Perniagaan</option>
-        <option>Fakulti Komunikasi & Pengajian Media</option>
-        <option>Fakulti Sains Komputer & Matematik</option>
-        <option>Fakulti Undang-Undang</option>
-        <option>Fakulti Kejuruteraan Awam</option>
-        <option>Fakulti Kejuruteraan Elektrik</option>
-        <option>Fakulti Kejuruteraan Mekanikal</option>
-        <option>Fakulti Sains Gunaan</option>
-        <option>Fakulti Sains Sukan & Rekreasi</option>
-        <option>Fakulti Sains Kesihatan</option>
-        <option>Fakulti Pergigian</option>
-        <option>Fakulti Farmasi</option>
-        <option>Fakulti Perubatan</option>
-        <option>Fakulti Seni Bina, Perancangan & Ukur</option>
-        <option>Fakulti Seni Lukis & Seni Reka</option>
-        <option>Fakulti Muzik</option>
-        <option>Fakulti Pendidikan</option>
-        <option>Pusat Pengajian Asasi</option>
-        <option>Lain-lain</option>
-      </select>
+        <div class="field">
+          <label for="f-studentid">No. Matrik</label>
+          <input type="text" id="f-studentid" placeholder="cth: 2022123456" maxlength="12" inputmode="numeric">
+        </div>
 
-      <label for="f-semester">Semester</label>
-      <select id="f-semester">
-        <option value="">-- Pilih Semester --</option>
-        <option>Semester 1</option>
-        <option>Semester 2</option>
-        <option>Semester 3</option>
-        <option>Semester 4</option>
-        <option>Semester 5</option>
-        <option>Semester 6</option>
-        <option>Semester 7</option>
-        <option>Semester 8</option>
-        <option>Semester 9</option>
-        <option>Semester 10</option>
-      </select>
+        <div class="field">
+          <label for="f-name">Nama Penuh</label>
+          <input type="text" id="f-name" maxlength="100" readonly>
+          <div class="field-hint">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Diambil automatik dari akaun UiTM anda
+          </div>
+        </div>
 
-      <button id="btn-submit" onclick="submitFirstTime()">Hantar Pendaftaran</button>
+        <div class="field">
+          <label for="f-faculty">Fakulti</label>
+          <select id="f-faculty">
+            <option value="">— Pilih Fakulti —</option>
+            <option>Fakulti Perakaunan</option>
+            <option>Fakulti Pengurusan Perniagaan</option>
+            <option>Fakulti Komunikasi & Pengajian Media</option>
+            <option>Fakulti Sains Komputer & Matematik</option>
+            <option>Fakulti Undang-Undang</option>
+            <option>Fakulti Kejuruteraan Awam</option>
+            <option>Fakulti Kejuruteraan Elektrik</option>
+            <option>Fakulti Kejuruteraan Mekanikal</option>
+            <option>Fakulti Sains Gunaan</option>
+            <option>Fakulti Sains Sukan & Rekreasi</option>
+            <option>Fakulti Sains Kesihatan</option>
+            <option>Fakulti Pergigian</option>
+            <option>Fakulti Farmasi</option>
+            <option>Fakulti Perubatan</option>
+            <option>Fakulti Seni Bina, Perancangan & Ukur</option>
+            <option>Fakulti Seni Lukis & Seni Reka</option>
+            <option>Fakulti Muzik</option>
+            <option>Fakulti Pendidikan</option>
+            <option>Pusat Pengajian Asasi</option>
+            <option>Lain-lain</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="f-semester">Semester</label>
+          <select id="f-semester">
+            <option value="">— Pilih Semester —</option>
+            <option>Semester 1</option>
+            <option>Semester 2</option>
+            <option>Semester 3</option>
+            <option>Semester 4</option>
+            <option>Semester 5</option>
+            <option>Semester 6</option>
+            <option>Semester 7</option>
+            <option>Semester 8</option>
+            <option>Semester 9</option>
+            <option>Semester 10</option>
+          </select>
+        </div>
+
+        <button class="btn" id="btn-submit" onclick="submitFirstTime()">Hantar Pendaftaran</button>
+      </div>
+
+      <p class="notice">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Log masuk Google UiTM diperlukan untuk pengesahan identiti.
+      </p>
     </div>
 
-    <p class="notice">Log masuk Google UiTM diperlukan untuk pengesahan identiti.</p>
-  </div>
+    <!-- Success confirmation -->
+    <div id="screen-confirm">
+      <div class="confirm-wrap">
+        <div class="check">
+          <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27 L23 34 L38 18"/></svg>
+        </div>
+        <div class="confirm-title">Pendaftaran Berjaya!</div>
+        <p id="confirm-progname"></p>
+        <div class="count-badge">
+          <div class="confirm-number" id="confirm-number"></div>
+          <div class="confirm-label">PELAJAR TELAH MENDAFTAR</div>
+        </div>
+        <div class="alert alert-success" style="justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+          <span>Kehadiran anda telah direkodkan.</span>
+        </div>
+      </div>
+    </div>
 
-  <!-- Success confirmation -->
-  <div id="screen-confirm">
-    <h2 style="text-align:center; margin-bottom:0.5rem">Pendaftaran Berjaya!</h2>
-    <p style="text-align:center; color:#666; font-size:0.9rem; margin-bottom:1rem" id="confirm-progname"></p>
-    <div class="confirm-number" id="confirm-number"></div>
-    <p class="confirm-label">pelajar telah mendaftar untuk program ini</p>
-    <div class="alert alert-success" style="text-align:center">Kehadiran anda telah direkodkan.</div>
-  </div>
+    <!-- Already registered -->
+    <div id="screen-already">
+      <div class="alert alert-info" id="already-msg"></div>
+    </div>
 
-  <!-- Already registered -->
-  <div id="screen-already">
-    <div class="alert alert-info" id="already-msg"></div>
+    <!-- Error -->
+    <div id="screen-error">
+      <div class="alert alert-error" id="error-msg"></div>
+    </div>
   </div>
+</div>
 
-  <!-- Error -->
-  <div id="screen-error">
-    <div class="alert alert-error" id="error-msg"></div>
+<div id="auth-wall">
+  <div class="auth-box">
+    <div class="auth-mark">UiTM</div>
+    <h2>Log Masuk Diperlukan</h2>
+    <p>Gunakan akaun Google UiTM anda untuk mengesahkan identiti sebelum mendaftar.</p>
+    <div id="gsi-btn"></div>
   </div>
 </div>
 
@@ -310,13 +467,13 @@
 
       // Render program card — textContent prevents XSS
       document.getElementById('prog-name').textContent = prog.name;
-      document.getElementById('prog-date').textContent = 'Tarikh: ' + prog.date;
-      document.getElementById('prog-organizer').textContent = 'Anjuran: ' + prog.organizer;
+      document.getElementById('prog-date').textContent = prog.date;
+      document.getElementById('prog-organizer').textContent = prog.organizer;
 
       if (profile.hasProfile) {
         document.getElementById('section-returning').style.display = 'block';
       } else {
-        // Auto-isi nama penuh dari akaun Google (boleh diedit)
+        // Auto-isi nama penuh dari akaun Google (readonly)
         document.getElementById('f-name').value = getUserName();
         document.getElementById('section-firsttime').style.display = 'block';
       }
@@ -386,14 +543,5 @@
 
   requireAuth(init);
 </script>
-
-<div id="auth-wall">
-  <div class="auth-box">
-    <div style="background:#7b2d8b;color:#fff;font-weight:700;font-size:0.8rem;padding:4px 12px;border-radius:6px;display:inline-block;margin-bottom:1rem;letter-spacing:1px">UiTM HEP</div>
-    <h2>Log Masuk Diperlukan</h2>
-    <p>Gunakan akaun Google UiTM anda untuk mengesahkan identiti.</p>
-    <div id="gsi-btn"></div>
-  </div>
-</div>
 </body>
 </html>
