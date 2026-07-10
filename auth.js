@@ -73,3 +73,34 @@ function getUserName() {
 function getUserEmail() {
   return _profile ? _profile.email : '';
 }
+
+// ─── Shared button loading spinner ─────────────────────────────────────────────
+
+(function injectBtnSpinnerCSS() {
+  const style = document.createElement('style');
+  style.textContent =
+    '.btn-spin{display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:6px;' +
+    'border:2px solid currentColor;border-right-color:transparent;border-radius:50%;' +
+    'animation:btnspin 0.6s linear infinite}' +
+    '@keyframes btnspin{to{transform:rotate(360deg)}}';
+  (document.head || document.documentElement).appendChild(style);
+})();
+
+/**
+ * Toggles an inline spinner + disabled state on a button.
+ * Preserves the original label and restores it when loading ends.
+ */
+function setBtnLoading(btn, loading, loadingText) {
+  if (!btn) return;
+  if (loading) {
+    if (btn.dataset.label === undefined) btn.dataset.label = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spin"></span>' + (loadingText || '');
+  } else {
+    btn.disabled = false;
+    if (btn.dataset.label !== undefined) {
+      btn.innerHTML = btn.dataset.label;
+      delete btn.dataset.label;
+    }
+  }
+}

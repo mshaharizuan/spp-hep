@@ -264,7 +264,7 @@
   <div class="card">
     <div class="card-title" style="justify-content:space-between">
       <span style="display:flex; align-items:center; gap:0.55rem"><span class="dot"></span>Senarai Program</span>
-      <button class="btn btn-outline btn-sm" onclick="loadPrograms()">Muat Semula</button>
+      <button class="btn btn-outline btn-sm" onclick="loadPrograms(this)">Muat Semula</button>
     </div>
     <div id="programs-list">
       <div class="spinner"></div>
@@ -309,8 +309,7 @@
     }
 
     const btn = document.getElementById('btn-create');
-    btn.disabled = true;
-    btn.textContent = 'Mencipta...';
+    setBtnLoading(btn, true, 'Mencipta…');
     document.getElementById('qr-result').style.display = 'none';
     document.getElementById('create-alert').style.display = 'none';
 
@@ -337,8 +336,7 @@
     } catch (err) {
       showCreateAlert('error', 'Ralat sambungan. Sila cuba semula.');
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Cipta Program';
+      setBtnLoading(btn, false);
     }
   }
 
@@ -372,9 +370,10 @@
 
   // ── Program list ──────────────────────────────────────────────────────────
 
-  async function loadPrograms() {
+  async function loadPrograms(btn) {
     const list = document.getElementById('programs-list');
     list.innerHTML = '<div class="spinner"></div>';
+    if (btn) setBtnLoading(btn, true, 'Memuat…');
 
     try {
       const res = await apiCall({ action: 'getKPI' });
@@ -478,14 +477,15 @@
 
     } catch (err) {
       list.innerHTML = '<div class="alert alert-error">Ralat sambungan. Sila cuba semula.</div>';
+    } finally {
+      if (btn) setBtnLoading(btn, false);
     }
   }
 
   async function confirmClose(pid, name, btn) {
     if (!confirm('Tutup program "' + name + '"? Pelajar tidak akan dapat mendaftar selepas ini.')) return;
 
-    btn.disabled = true;
-    btn.textContent = 'Menutup...';
+    setBtnLoading(btn, true, 'Menutup…');
 
     try {
       const res = await apiCall({ action: 'closeProgram', pid });
@@ -493,13 +493,11 @@
         loadPrograms();
       } else {
         alert('Ralat: ' + res.error);
-        btn.disabled = false;
-        btn.textContent = 'Tutup Program';
+        setBtnLoading(btn, false);
       }
     } catch (err) {
       alert('Ralat sambungan. Sila cuba semula.');
-      btn.disabled = false;
-      btn.textContent = 'Tutup Program';
+      setBtnLoading(btn, false);
     }
   }
 

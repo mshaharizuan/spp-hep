@@ -204,8 +204,8 @@
   </div>
   <div class="header-actions">
     <a class="nav-link" href="admin.html">← Admin Panel</a>
-    <button class="btn btn-outline" onclick="loadKPI()">Muat Semula</button>
-    <button class="btn btn-primary" id="btn-export" onclick="exportCSV()" disabled>Export CSV</button>
+    <button class="btn btn-outline" onclick="loadKPI(this)">Muat Semula</button>
+    <button class="btn btn-primary" id="btn-export" onclick="exportCSV(this)" disabled>Export CSV</button>
   </div>
 </header>
 
@@ -221,9 +221,10 @@
   let facultyChart = null;
   let semesterChart = null;
 
-  async function loadKPI() {
+  async function loadKPI(btn) {
     document.getElementById('main-content').innerHTML = '<div class="spinner"></div>';
     document.getElementById('btn-export').disabled = true;
+    if (btn) setBtnLoading(btn, true, 'Memuat…');
 
     try {
       const res = await fetch(API, {
@@ -246,6 +247,8 @@
     } catch (err) {
       document.getElementById('main-content').innerHTML =
         '<div class="alert-error">Ralat sambungan. Sila cuba semula.</div>';
+    } finally {
+      if (btn) setBtnLoading(btn, false);
     }
   }
 
@@ -441,8 +444,14 @@
 
   // ── CSV Export ──────────────────────────────────────────────────────────────
 
-  function exportCSV() {
+  function exportCSV(btn) {
     if (!kpiData) return;
+
+    if (btn) {
+      setBtnLoading(btn, true, 'Menyedia…');
+      // Restore shortly after the browser triggers the download
+      setTimeout(() => setBtnLoading(btn, false), 800);
+    }
 
     const rows = [
       ['=== KPI SUMMARY ==='],

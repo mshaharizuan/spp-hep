@@ -185,6 +185,23 @@
 
     .divider { border: none; border-top: 1px solid var(--line); margin: 1.3rem 0; }
 
+    /* Returning student profile summary */
+    .profile-summary {
+      border: 1.5px solid var(--line);
+      border-radius: 13px;
+      overflow: hidden;
+      margin-bottom: 1.2rem;
+      background: linear-gradient(180deg, #fbfafd, #fff);
+    }
+    .ps-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.7rem 0.95rem; gap: 1rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .ps-row:last-child { border-bottom: none; }
+    .ps-label { font-size: 0.76rem; color: var(--muted); font-weight: 600; flex: none; }
+    .ps-value { font-size: 0.86rem; font-weight: 700; text-align: right; }
+
     /* ── Screens ── */
     #screen-loading, #screen-program, #screen-confirm, #screen-already, #screen-error { display: none; }
 
@@ -287,12 +304,20 @@
         </div>
       </div>
 
-      <!-- Returning student: single button -->
+      <!-- Returning student: profile summary (readonly) + single button -->
       <div id="section-returning" style="display:none">
         <div class="alert alert-info">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-          <span>Profil anda telah tersimpan. Tekan butang di bawah untuk merekod kehadiran.</span>
+          <span>Semak maklumat anda, kemudian tekan butang untuk merekod kehadiran.</span>
         </div>
+
+        <div class="profile-summary">
+          <div class="ps-row"><span class="ps-label">No. Matrik</span><span class="ps-value" id="ps-studentid"></span></div>
+          <div class="ps-row"><span class="ps-label">Nama Penuh</span><span class="ps-value" id="ps-name"></span></div>
+          <div class="ps-row"><span class="ps-label">Fakulti</span><span class="ps-value" id="ps-faculty"></span></div>
+          <div class="ps-row"><span class="ps-label">Semester</span><span class="ps-value" id="ps-semester"></span></div>
+        </div>
+
         <button class="btn" id="btn-register" onclick="submitExisting()">Daftar Kehadiran</button>
       </div>
 
@@ -471,6 +496,11 @@
       document.getElementById('prog-organizer').textContent = prog.organizer;
 
       if (profile.hasProfile) {
+        // Papar semula maklumat pelajar (readonly) — textContent elak XSS
+        document.getElementById('ps-studentid').textContent = profile.student_id;
+        document.getElementById('ps-name').textContent = profile.name;
+        document.getElementById('ps-faculty').textContent = profile.faculty;
+        document.getElementById('ps-semester').textContent = profile.semester;
         document.getElementById('section-returning').style.display = 'block';
       } else {
         // Auto-isi nama penuh dari akaun Google (readonly)
@@ -486,14 +516,15 @@
   }
 
   async function submitExisting() {
-    setDisabled('btn-register', true);
+    const btn = document.getElementById('btn-register');
+    setBtnLoading(btn, true, 'Mendaftar…');
     try {
       const res = await apiCall({ action: 'submitParticipation', pid: currentPid });
       handleSubmitResult(res);
     } catch (err) {
       showError('Ralat sambungan. Sila cuba semula.');
     } finally {
-      setDisabled('btn-register', false);
+      setBtnLoading(btn, false);
     }
   }
 
@@ -508,7 +539,8 @@
       return;
     }
 
-    setDisabled('btn-submit', true);
+    const btn = document.getElementById('btn-submit');
+    setBtnLoading(btn, true, 'Menghantar…');
     try {
       const res = await apiCall({
         action: 'submitParticipation',
@@ -519,7 +551,7 @@
     } catch (err) {
       showError('Ralat sambungan. Sila cuba semula.');
     } finally {
-      setDisabled('btn-submit', false);
+      setBtnLoading(btn, false);
     }
   }
 
