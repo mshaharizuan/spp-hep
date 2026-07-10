@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — SPP UiTM</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-badge {
+      background: #7b2d8b;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 4px 12px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+    }
+
+    h1 { font-size: 1.3rem; color: #1a1a2e; }
+    .nav-link { font-size: 0.85rem; color: #7b2d8b; text-decoration: none; font-weight: 600; }
+    .nav-link:hover { text-decoration: underline; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #f0f4f8;
+    }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 0.3rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    input:focus { outline: none; border-color: #7b2d8b; }
+
+    .btn {
+      padding: 0.65rem 1.25rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary  { background: #7b2d8b; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #5e1f6e; }
+    .btn-sm       { padding: 0.35rem 0.75rem; font-size: 0.78rem; }
+    .btn-outline  { background: transparent; border: 1.5px solid #7b2d8b; color: #7b2d8b; }
+    .btn-outline:hover:not(:disabled) { background: #f5edf7; }
+    .btn-danger   { background: transparent; border: 1.5px solid #c0392b; color: #c0392b; }
+    .btn-danger:hover:not(:disabled) { background: #fdecea; }
+
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      margin-bottom: 1rem;
+    }
+    .alert-success { background: #eafaf1; color: #1a6b3c; }
+    .alert-error   { background: #fdecea; color: #8a1c1c; }
+
+    /* QR result panel */
+    #qr-result { display: none; margin-top: 1.25rem; }
+
+    .qr-box {
+      border: 2px dashed #d1d5db;
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    #qr-canvas { margin: 0 auto 0.75rem; }
+
+    .link-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .link-box {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: #333;
+      background: #f9fafb;
+      word-break: break-all;
+    }
+
+    /* Program list */
+    #programs-list { margin-top: 0; }
+
+    .program-item {
+      padding: 0.9rem 0;
+      border-bottom: 1px solid #f0f4f8;
+    }
+    .program-item:last-child { border-bottom: none; }
+
+    .prog-row1 {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .prog-name { font-weight: 600; font-size: 0.92rem; color: #1a1a2e; }
+    .prog-meta { font-size: 0.78rem; color: #888; margin-top: 0.15rem; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-open   { background: #eafaf1; color: #1a6b3c; }
+    .badge-closed { background: #f0f4f8; color: #888; }
+
+    .prog-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .count-chip {
+      font-size: 0.78rem;
+      color: #7b2d8b;
+      font-weight: 700;
+      align-self: center;
+    }
+
+    .empty { color: #aaa; font-size: 0.88rem; text-align: center; padding: 2rem 0; }
+
+    .spinner { text-align: center; color: #7b2d8b; padding: 2rem 0; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="brand-badge">UiTM HEP</span>
+    <h1>Admin Panel</h1>
+  </div>
+  <a class="nav-link" href="dashboard.html">KPI Dashboard →</a>
+</header>
+
+<div class="grid">
+
+  <!-- ── Create Program ── -->
+  <div class="card">
+    <div class="card-title">Cipta Program Baru</div>
+
+    <div id="create-alert" style="display:none"></div>
+
+    <label for="c-name">Nama Program</label>
+    <input type="text" id="c-name" placeholder="cth: Karnival Sukan 2025" maxlength="100">
+
+    <label for="c-date">Tarikh Program</label>
+    <input type="date" id="c-date">
+
+    <label for="c-organizer">Anjuran / Unit</label>
+    <input type="text" id="c-organizer" placeholder="cth: Biro Sukan HEP" maxlength="100">
+
+    <button class="btn btn-primary" id="btn-create" onclick="createProgram()">Cipta Program</button>
+
+    <!-- QR + link result -->
+    <div id="qr-result">
+      <div class="qr-box">
+        <div id="qr-canvas"></div>
+        <p style="font-size:0.82rem; color:#555; margin-bottom:0.5rem">Imbas QR semasa program fizikal</p>
+        <div class="link-row">
+          <div class="link-box" id="qr-link-text"></div>
+          <button class="btn btn-outline btn-sm" onclick="copyLink()">Salin</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Program List ── -->
+  <div class="card">
+    <div class="card-title" style="display:flex; justify-content:space-between; align-items:center">
+      <span>Senarai Program</span>
+      <button class="btn btn-outline btn-sm" onclick="loadPrograms()">Muat Semula</button>
+    </div>
+    <div id="programs-list">
+      <div class="spinner">Memuatkan...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const API = 'https://script.google.com/a/macros/uitm.edu.my/s/AKfycbzt6QEegIEJlrK_Xt5hqXIfXolq1oDkBrXKtU3Yca9ok7uYmv4LmdeyKcy8RAkP_gniYQ/exec';
+  const BASE_URL = window.location.origin + window.location.pathname.replace('admin.html', '');
+
+  let lastQrLink = '';
+
+  async function apiGet(params) {
+    const url = new URL(API);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    const res = await fetch(url.toString(), { redirect: 'follow' });
+    return res.json();
+  }
+
+  async function apiPost(payload) {
+    const res = await fetch(API, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      redirect: 'follow',
+    });
+    return res.json();
+  }
+
+  function showCreateAlert(type, msg) {
+    const el = document.getElementById('create-alert');
+    el.className = 'alert alert-' + type;
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  // ── Create program ────────────────────────────────────────────────────────
+
+  async function createProgram() {
+    const name      = document.getElementById('c-name').value.trim();
+    const date      = document.getElementById('c-date').value;
+    const organizer = document.getElementById('c-organizer').value.trim();
+
+    if (!name || !date || !organizer) {
+      showCreateAlert('error', 'Sila isi semua medan.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-create');
+    btn.disabled = true;
+    btn.textContent = 'Mencipta...';
+    document.getElementById('qr-result').style.display = 'none';
+    document.getElementById('create-alert').style.display = 'none';
+
+    try {
+      const res = await apiPost({ action: 'createProgram', name, date, organizer });
+
+      if (!res.ok) {
+        showCreateAlert('error', res.error);
+        return;
+      }
+
+      const { pid } = res.data;
+      const registerUrl = BASE_URL + 'register.html?pid=' + pid;
+
+      showCreateAlert('success', 'Program berjaya dicipta! PID: ' + pid);
+      renderQR(registerUrl);
+      loadPrograms();
+
+      // Reset form
+      document.getElementById('c-name').value = '';
+      document.getElementById('c-date').value = '';
+      document.getElementById('c-organizer').value = '';
+
+    } catch (err) {
+      showCreateAlert('error', 'Ralat sambungan. Sila cuba semula.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Cipta Program';
+    }
+  }
+
+  function renderQR(url) {
+    lastQrLink = url;
+    const container = document.getElementById('qr-canvas');
+    container.innerHTML = '';
+
+    new QRCode(container, {
+      text: url,
+      width: 180,
+      height: 180,
+      colorDark: '#1a1a2e',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+
+    // textContent prevents XSS
+    document.getElementById('qr-link-text').textContent = url;
+    document.getElementById('qr-result').style.display = 'block';
+  }
+
+  function copyLink() {
+    if (!lastQrLink) return;
+    navigator.clipboard.writeText(lastQrLink).then(() => {
+      const btn = event.target;
+      btn.textContent = 'Disalin!';
+      setTimeout(() => { btn.textContent = 'Salin'; }, 2000);
+    });
+  }
+
+  // ── Program list ──────────────────────────────────────────────────────────
+
+  async function loadPrograms() {
+    const list = document.getElementById('programs-list');
+    list.innerHTML = '<div class="spinner">Memuatkan...</div>';
+
+    try {
+      const res = await apiGet({ action: 'getKPI' });
+
+      if (!res.ok) {
+        list.innerHTML = '<div class="alert alert-error">' + sanitizeText(res.error) + '</div>';
+        return;
+      }
+
+      const programs = res.data.programs;
+
+      if (!programs || programs.length === 0) {
+        list.innerHTML = '<div class="empty">Tiada program lagi.</div>';
+        return;
+      }
+
+      // Sort: open first, then by date desc
+      programs.sort((a, b) => {
+        if (a.status === b.status) return new Date(b.date) - new Date(a.date);
+        return a.status === 'open' ? -1 : 1;
+      });
+
+      list.innerHTML = '';
+      programs.forEach(prog => {
+        const item = document.createElement('div');
+        item.className = 'program-item';
+
+        const row1 = document.createElement('div');
+        row1.className = 'prog-row1';
+
+        const info = document.createElement('div');
+        const nameEl = document.createElement('div');
+        nameEl.className = 'prog-name';
+        nameEl.textContent = prog.name;          // textContent — XSS safe
+
+        const meta = document.createElement('div');
+        meta.className = 'prog-meta';
+        meta.textContent = prog.date + ' · ' + prog.organizer;
+
+        info.appendChild(nameEl);
+        info.appendChild(meta);
+
+        const right = document.createElement('div');
+        right.style.display = 'flex';
+        right.style.alignItems = 'center';
+        right.style.gap = '0.5rem';
+
+        const badge = document.createElement('span');
+        badge.className = 'badge badge-' + prog.status;
+        badge.textContent = prog.status === 'open' ? 'Buka' : 'Tutup';
+
+        const count = document.createElement('span');
+        count.className = 'count-chip';
+        count.textContent = prog.participantCount + ' pelajar';
+
+        right.appendChild(badge);
+        right.appendChild(count);
+        row1.appendChild(info);
+        row1.appendChild(right);
+
+        const actions = document.createElement('div');
+        actions.className = 'prog-actions';
+
+        // Copy link button
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'btn btn-outline btn-sm';
+        copyBtn.textContent = 'Salin Link';
+        const regUrl = BASE_URL + 'register.html?pid=' + prog.pid;
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(regUrl).then(() => {
+            copyBtn.textContent = 'Disalin!';
+            setTimeout(() => { copyBtn.textContent = 'Salin Link'; }, 2000);
+          });
+        };
+
+        // Show QR button
+        const qrBtn = document.createElement('button');
+        qrBtn.className = 'btn btn-outline btn-sm';
+        qrBtn.textContent = 'Tunjuk QR';
+        qrBtn.onclick = () => {
+          renderQR(regUrl);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        actions.appendChild(copyBtn);
+        actions.appendChild(qrBtn);
+
+        // Close button — only for open programs
+        if (prog.status === 'open') {
+          const closeBtn = document.createElement('button');
+          closeBtn.className = 'btn btn-danger btn-sm';
+          closeBtn.textContent = 'Tutup Program';
+          closeBtn.onclick = () => confirmClose(prog.pid, prog.name, closeBtn);
+          actions.appendChild(closeBtn);
+        }
+
+        item.appendChild(row1);
+        item.appendChild(actions);
+        list.appendChild(item);
+      });
+
+    } catch (err) {
+      list.innerHTML = '<div class="alert alert-error">Ralat sambungan. Sila cuba semula.</div>';
+    }
+  }
+
+  async function confirmClose(pid, name, btn) {
+    if (!confirm('Tutup program "' + name + '"? Pelajar tidak akan dapat mendaftar selepas ini.')) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Menutup...';
+
+    try {
+      const res = await apiPost({ action: 'closeProgram', pid });
+      if (res.ok) {
+        loadPrograms();
+      } else {
+        alert('Ralat: ' + res.error);
+        btn.disabled = false;
+        btn.textContent = 'Tutup Program';
+      }
+    } catch (err) {
+      alert('Ralat sambungan. Sila cuba semula.');
+      btn.disabled = false;
+      btn.textContent = 'Tutup Program';
+    }
+  }
+
+  function sanitizeText(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // Init
+  loadPrograms();
+</script>
+</body>
+</html>

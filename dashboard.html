@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard KPI — SPP UiTM</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-badge {
+      background: #7b2d8b;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 4px 12px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+    }
+
+    h1 { font-size: 1.3rem; color: #1a1a2e; }
+
+    .header-actions { display: flex; gap: 0.75rem; align-items: center; }
+    .nav-link { font-size: 0.85rem; color: #7b2d8b; text-decoration: none; font-weight: 600; }
+    .nav-link:hover { text-decoration: underline; }
+
+    .btn {
+      padding: 0.55rem 1.1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #7b2d8b; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #5e1f6e; }
+    .btn-outline { background: #fff; border: 1.5px solid #7b2d8b; color: #7b2d8b; }
+    .btn-outline:hover:not(:disabled) { background: #f5edf7; }
+
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .kpi-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      border-left: 4px solid #7b2d8b;
+    }
+
+    .kpi-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.35rem;
+    }
+
+    .kpi-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #7b2d8b;
+      line-height: 1;
+    }
+
+    .kpi-sub {
+      font-size: 0.78rem;
+      color: #aaa;
+      margin-top: 0.3rem;
+    }
+
+    /* Charts row */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      padding: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 1.1rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 2px solid #f0f4f8;
+    }
+
+    /* Program table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      background: #f5edf7;
+      color: #5e1f6e;
+      font-weight: 700;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    td {
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid #f0f4f8;
+      color: #333;
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #faf5fb; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .badge-open   { background: #eafaf1; color: #1a6b3c; }
+    .badge-closed { background: #f0f4f8; color: #888; }
+
+    .spinner { text-align: center; color: #7b2d8b; padding: 2.5rem 0; font-size: 0.9rem; }
+    .alert-error { background: #fdecea; color: #8a1c1c; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.88rem; }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.1rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 2px solid #f0f4f8;
+    }
+
+    .section-title { font-size: 0.95rem; font-weight: 700; color: #1a1a2e; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="brand-badge">UiTM HEP</span>
+    <h1>Dashboard KPI</h1>
+  </div>
+  <div class="header-actions">
+    <a class="nav-link" href="admin.html">← Admin Panel</a>
+    <button class="btn btn-outline" onclick="loadKPI()">Muat Semula</button>
+    <button class="btn btn-primary" id="btn-export" onclick="exportCSV()" disabled>Export CSV</button>
+  </div>
+</header>
+
+<div id="main-content">
+  <div class="spinner">Memuatkan data KPI...</div>
+</div>
+
+<script>
+  const API = 'https://script.google.com/a/macros/uitm.edu.my/s/AKfycbzt6QEegIEJlrK_Xt5hqXIfXolq1oDkBrXKtU3Yca9ok7uYmv4LmdeyKcy8RAkP_gniYQ/exec';
+
+  let kpiData = null;
+  let facultyChart = null;
+  let semesterChart = null;
+
+  async function loadKPI() {
+    document.getElementById('main-content').innerHTML = '<div class="spinner">Memuatkan data KPI...</div>';
+    document.getElementById('btn-export').disabled = true;
+
+    try {
+      const url = new URL(API);
+      url.searchParams.set('action', 'getKPI');
+      const res = await fetch(url.toString(), { redirect: 'follow' });
+      const json = await res.json();
+
+      if (!json.ok) {
+        document.getElementById('main-content').innerHTML =
+          '<div class="alert-error">' + escapeText(json.error) + '</div>';
+        return;
+      }
+
+      kpiData = json.data;
+      render(kpiData);
+      document.getElementById('btn-export').disabled = false;
+
+    } catch (err) {
+      document.getElementById('main-content').innerHTML =
+        '<div class="alert-error">Ralat sambungan. Sila cuba semula.</div>';
+    }
+  }
+
+  function render(d) {
+    const html = `
+      <div class="kpi-grid" id="kpi-grid"></div>
+      <div class="charts-grid">
+        <div class="card">
+          <div class="card-title">Penglibatan Mengikut Fakulti</div>
+          <canvas id="chart-faculty" height="260"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">Penglibatan Mengikut Semester</div>
+          <canvas id="chart-semester" height="260"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-header">
+          <span class="section-title">Senarai Program</span>
+          <span style="font-size:0.8rem;color:#aaa">${d.programs.length} program</span>
+        </div>
+        <div id="programs-table"></div>
+      </div>
+    `;
+
+    document.getElementById('main-content').innerHTML = html;
+
+    renderKPICards(d);
+    renderChart('chart-faculty', d.facultyBreakdown, 'Pelajar');
+    renderChart('chart-semester', d.semesterBreakdown, 'Pelajar');
+    renderProgramsTable(d.programs);
+  }
+
+  function renderKPICards(d) {
+    const grid = document.getElementById('kpi-grid');
+
+    const cards = [
+      {
+        label: 'KPI 1 — Capaian Unik',
+        value: d.kpi1.value + '%',
+        sub: d.kpi1.uniqueStudents + ' pelajar unik / ' + d.kpi1.totalPopulation.toLocaleString() + ' populasi',
+      },
+      {
+        label: 'KPI 2 — Kedalaman Penglibatan',
+        value: d.kpi2.value + '%',
+        sub: d.kpi2.multiParticipants + ' pelajar terlibat ≥2 program',
+      },
+      {
+        label: 'Jumlah Program',
+        value: d.programs.length,
+        sub: d.programs.filter(p => p.status === 'open').length + ' program aktif',
+      },
+      {
+        label: 'Jumlah Pendaftaran',
+        value: d.programs.reduce((s, p) => s + p.participantCount, 0).toLocaleString(),
+        sub: 'rekod kehadiran keseluruhan',
+      },
+    ];
+
+    cards.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'kpi-card';
+
+      const label = document.createElement('div');
+      label.className = 'kpi-label';
+      label.textContent = c.label;
+
+      const value = document.createElement('div');
+      value.className = 'kpi-value';
+      value.textContent = c.value;
+
+      const sub = document.createElement('div');
+      sub.className = 'kpi-sub';
+      sub.textContent = c.sub;
+
+      card.appendChild(label);
+      card.appendChild(value);
+      card.appendChild(sub);
+      grid.appendChild(card);
+    });
+  }
+
+  function renderChart(canvasId, breakdown, dataLabel) {
+    if (facultyChart && canvasId === 'chart-faculty') { facultyChart.destroy(); }
+    if (semesterChart && canvasId === 'chart-semester') { semesterChart.destroy(); }
+
+    const labels = breakdown.map(r => r.label);
+    const data   = breakdown.map(r => r.count);
+
+    const chart = new Chart(document.getElementById(canvasId), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: dataLabel,
+          data,
+          backgroundColor: 'rgba(123, 45, 139, 0.7)',
+          borderColor: '#7b2d8b',
+          borderWidth: 1,
+          borderRadius: 5,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const row = breakdown[ctx.dataIndex];
+                return ctx.parsed.y + ' pelajar (' + row.pct + '%)';
+              },
+            },
+          },
+        },
+        scales: {
+          x: { ticks: { font: { size: 10 }, maxRotation: 40 } },
+          y: { beginAtZero: true, ticks: { stepSize: 1 } },
+        },
+      },
+    });
+
+    if (canvasId === 'chart-faculty') facultyChart = chart;
+    else semesterChart = chart;
+  }
+
+  function renderProgramsTable(programs) {
+    const container = document.getElementById('programs-table');
+
+    if (!programs.length) {
+      container.innerHTML = '<p style="color:#aaa;text-align:center;padding:1.5rem 0">Tiada program lagi.</p>';
+      return;
+    }
+
+    const sorted = [...programs].sort((a, b) => {
+      if (a.status === b.status) return new Date(b.date) - new Date(a.date);
+      return a.status === 'open' ? -1 : 1;
+    });
+
+    const table = document.createElement('table');
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    ['Nama Program', 'Tarikh', 'Anjuran', 'Pelajar', 'Status'].forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    sorted.forEach(prog => {
+      const tr = document.createElement('tr');
+
+      const cells = [
+        prog.name,
+        prog.date,
+        prog.organizer,
+        prog.participantCount,
+      ];
+
+      cells.forEach(val => {
+        const td = document.createElement('td');
+        td.textContent = val; // textContent — XSS safe
+        tr.appendChild(td);
+      });
+
+      const statusTd = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = 'badge badge-' + prog.status;
+      badge.textContent = prog.status === 'open' ? 'Buka' : 'Tutup';
+      statusTd.appendChild(badge);
+      tr.appendChild(statusTd);
+
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    container.appendChild(table);
+  }
+
+  // ── CSV Export ──────────────────────────────────────────────────────────────
+
+  function exportCSV() {
+    if (!kpiData) return;
+
+    const rows = [
+      ['=== KPI SUMMARY ==='],
+      ['KPI 1 - Capaian Unik (%)', kpiData.kpi1.value],
+      ['Pelajar Unik', kpiData.kpi1.uniqueStudents],
+      ['Jumlah Populasi', kpiData.kpi1.totalPopulation],
+      ['KPI 2 - Kedalaman Penglibatan (%)', kpiData.kpi2.value],
+      ['Pelajar ≥2 Program', kpiData.kpi2.multiParticipants],
+      [],
+      ['=== PROGRAM ==='],
+      ['Nama', 'Tarikh', 'Anjuran', 'Pelajar', 'Status'],
+      ...kpiData.programs.map(p => [p.name, p.date, p.organizer, p.participantCount, p.status]),
+      [],
+      ['=== BREAKDOWN FAKULTI ==='],
+      ['Fakulti', 'Pelajar', '%'],
+      ...kpiData.facultyBreakdown.map(r => [r.label, r.count, r.pct]),
+      [],
+      ['=== BREAKDOWN SEMESTER ==='],
+      ['Semester', 'Pelajar', '%'],
+      ...kpiData.semesterBreakdown.map(r => [r.label, r.count, r.pct]),
+    ];
+
+    const csv = rows.map(row =>
+      row.map(cell => {
+        const s = String(cell === undefined ? '' : cell);
+        // Escape for CSV — wrap in quotes if contains comma, quote, or newline
+        return /[,"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      }).join(',')
+    ).join('\r\n');
+
+    // BOM for Excel UTF-8 compatibility
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const today = new Date().toISOString().slice(0, 10);
+    a.download = 'KPI_HEP_' + today + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function escapeText(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  loadKPI();
+</script>
+</body>
+</html>

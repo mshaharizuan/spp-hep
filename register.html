@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pendaftaran Program</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .logo span {
+      display: inline-block;
+      background: #7b2d8b;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 4px 12px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+    }
+
+    h2 { font-size: 1.25rem; color: #1a1a2e; margin-bottom: 0.25rem; }
+    .meta { font-size: 0.85rem; color: #666; margin-bottom: 1.5rem; }
+    .meta span { display: block; }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.35rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #7b2d8b;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background: #7b2d8b;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #5e1f6e; }
+    button:disabled { background: #b39dbe; cursor: not-allowed; }
+
+    .notice {
+      font-size: 0.8rem;
+      color: #666;
+      text-align: center;
+      margin-top: 1rem;
+      line-height: 1.5;
+    }
+
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .alert-info    { background: #e8f4fd; color: #0c5a8a; }
+    .alert-success { background: #eafaf1; color: #1a6b3c; }
+    .alert-error   { background: #fdecea; color: #8a1c1c; }
+
+    #screen-loading,
+    #screen-program,
+    #screen-confirm,
+    #screen-already,
+    #screen-error { display: none; }
+
+    .spinner {
+      text-align: center;
+      padding: 2rem 0;
+      color: #7b2d8b;
+      font-size: 0.95rem;
+    }
+
+    .confirm-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #7b2d8b;
+      text-align: center;
+      margin: 0.5rem 0;
+    }
+
+    .confirm-label {
+      text-align: center;
+      color: #555;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 1.25rem 0;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><span>UiTM HEP</span></div>
+
+  <!-- Loading -->
+  <div id="screen-loading">
+    <div class="spinner">Memuatkan maklumat program...</div>
+  </div>
+
+  <!-- Program info + registration form -->
+  <div id="screen-program">
+    <h2 id="prog-name"></h2>
+    <div class="meta">
+      <span id="prog-date"></span>
+      <span id="prog-organizer"></span>
+    </div>
+    <hr class="divider">
+
+    <!-- Returning student: single button -->
+    <div id="section-returning" style="display:none">
+      <p class="alert alert-info">Profil anda telah disimpan. Tekan butang di bawah untuk mendaftar kehadiran.</p>
+      <button id="btn-register" onclick="submitExisting()">Daftar Kehadiran</button>
+    </div>
+
+    <!-- First-timer: full profile form -->
+    <div id="section-firsttime" style="display:none">
+      <p class="alert alert-info">Pendaftaran pertama — sila lengkapkan profil anda.</p>
+
+      <label for="f-studentid">No. Matrik</label>
+      <input type="text" id="f-studentid" placeholder="cth: 2022123456" maxlength="12">
+
+      <label for="f-name">Nama Penuh</label>
+      <input type="text" id="f-name" placeholder="Nama seperti dalam kad matrik" maxlength="100">
+
+      <label for="f-faculty">Fakulti</label>
+      <select id="f-faculty">
+        <option value="">-- Pilih Fakulti --</option>
+        <option>Fakulti Perakaunan</option>
+        <option>Fakulti Pengurusan Perniagaan</option>
+        <option>Fakulti Komunikasi & Pengajian Media</option>
+        <option>Fakulti Sains Komputer & Matematik</option>
+        <option>Fakulti Undang-Undang</option>
+        <option>Fakulti Kejuruteraan Awam</option>
+        <option>Fakulti Kejuruteraan Elektrik</option>
+        <option>Fakulti Kejuruteraan Mekanikal</option>
+        <option>Fakulti Sains Gunaan</option>
+        <option>Fakulti Sains Sukan & Rekreasi</option>
+        <option>Fakulti Sains Kesihatan</option>
+        <option>Fakulti Pergigian</option>
+        <option>Fakulti Farmasi</option>
+        <option>Fakulti Perubatan</option>
+        <option>Fakulti Seni Bina, Perancangan & Ukur</option>
+        <option>Fakulti Seni Lukis & Seni Reka</option>
+        <option>Fakulti Muzik</option>
+        <option>Fakulti Pendidikan</option>
+        <option>Pusat Pengajian Asasi</option>
+        <option>Lain-lain</option>
+      </select>
+
+      <label for="f-semester">Semester</label>
+      <select id="f-semester">
+        <option value="">-- Pilih Semester --</option>
+        <option>Semester 1</option>
+        <option>Semester 2</option>
+        <option>Semester 3</option>
+        <option>Semester 4</option>
+        <option>Semester 5</option>
+        <option>Semester 6</option>
+        <option>Semester 7</option>
+        <option>Semester 8</option>
+        <option>Semester 9</option>
+        <option>Semester 10</option>
+      </select>
+
+      <button id="btn-submit" onclick="submitFirstTime()">Hantar Pendaftaran</button>
+    </div>
+
+    <p class="notice">Log masuk Google UiTM diperlukan untuk pengesahan identiti.</p>
+  </div>
+
+  <!-- Success confirmation -->
+  <div id="screen-confirm">
+    <h2 style="text-align:center; margin-bottom:0.5rem">Pendaftaran Berjaya!</h2>
+    <p style="text-align:center; color:#666; font-size:0.9rem; margin-bottom:1rem" id="confirm-progname"></p>
+    <div class="confirm-number" id="confirm-number"></div>
+    <p class="confirm-label">pelajar telah mendaftar untuk program ini</p>
+    <div class="alert alert-success" style="text-align:center">Kehadiran anda telah direkodkan.</div>
+  </div>
+
+  <!-- Already registered -->
+  <div id="screen-already">
+    <div class="alert alert-info" id="already-msg"></div>
+  </div>
+
+  <!-- Error -->
+  <div id="screen-error">
+    <div class="alert alert-error" id="error-msg"></div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://script.google.com/a/macros/uitm.edu.my/s/AKfycbzt6QEegIEJlrK_Xt5hqXIfXolq1oDkBrXKtU3Yca9ok7uYmv4LmdeyKcy8RAkP_gniYQ/exec';
+
+  let currentPid = null;
+
+  function show(screenId) {
+    ['screen-loading','screen-program','screen-confirm','screen-already','screen-error']
+      .forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById(screenId).style.display = 'block';
+  }
+
+  function setDisabled(btnId, state) {
+    document.getElementById(btnId).disabled = state;
+  }
+
+  async function apiGet(params) {
+    const url = new URL(API);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    const res = await fetch(url.toString(), { redirect: 'follow' });
+    return res.json();
+  }
+
+  async function apiPost(payload) {
+    const res = await fetch(API, {
+      method: 'POST',
+      // text/plain avoids CORS preflight on Apps Script
+      body: JSON.stringify(payload),
+      redirect: 'follow',
+    });
+    return res.json();
+  }
+
+  function showError(msg) {
+    // Use textContent — never innerHTML — to prevent XSS
+    document.getElementById('error-msg').textContent = msg;
+    show('screen-error');
+  }
+
+  async function init() {
+    show('screen-loading');
+
+    const params = new URLSearchParams(window.location.search);
+    currentPid = params.get('pid');
+    if (!currentPid) { showError('Pautan tidak sah. Sila imbas semula QR code program.'); return; }
+
+    try {
+      // Fetch program info and profile in parallel
+      const [progRes, profileRes] = await Promise.all([
+        apiGet({ action: 'getProgram', pid: currentPid }),
+        apiGet({ action: 'getMyProfile' }),
+      ]);
+
+      if (!progRes.ok) { showError(progRes.error); return; }
+      if (!profileRes.ok) { showError(profileRes.error); return; }
+
+      const prog = progRes.data;
+      const profile = profileRes.data;
+
+      if (prog.status !== 'open') {
+        showError('Program ini telah ditutup dan tidak menerima pendaftaran baru.');
+        return;
+      }
+
+      // Render program card — textContent prevents XSS
+      document.getElementById('prog-name').textContent = prog.name;
+      document.getElementById('prog-date').textContent = 'Tarikh: ' + prog.date;
+      document.getElementById('prog-organizer').textContent = 'Anjuran: ' + prog.organizer;
+
+      if (profile.hasProfile) {
+        document.getElementById('section-returning').style.display = 'block';
+      } else {
+        document.getElementById('section-firsttime').style.display = 'block';
+      }
+
+      show('screen-program');
+
+    } catch (err) {
+      showError('Ralat sambungan. Sila cuba semula.');
+    }
+  }
+
+  async function submitExisting() {
+    setDisabled('btn-register', true);
+    try {
+      const res = await apiPost({ action: 'submitParticipation', pid: currentPid });
+      handleSubmitResult(res);
+    } catch (err) {
+      showError('Ralat sambungan. Sila cuba semula.');
+    } finally {
+      setDisabled('btn-register', false);
+    }
+  }
+
+  async function submitFirstTime() {
+    const studentId = document.getElementById('f-studentid').value.trim();
+    const name      = document.getElementById('f-name').value.trim();
+    const faculty   = document.getElementById('f-faculty').value;
+    const semester  = document.getElementById('f-semester').value;
+
+    if (!studentId || !name || !faculty || !semester) {
+      alert('Sila lengkapkan semua maklumat profil.');
+      return;
+    }
+
+    setDisabled('btn-submit', true);
+    try {
+      const res = await apiPost({
+        action: 'submitParticipation',
+        pid: currentPid,
+        profile: { student_id: studentId, name, faculty, semester },
+      });
+      handleSubmitResult(res);
+    } catch (err) {
+      showError('Ralat sambungan. Sila cuba semula.');
+    } finally {
+      setDisabled('btn-submit', false);
+    }
+  }
+
+  function handleSubmitResult(res) {
+    if (!res.ok) { showError(res.error); return; }
+
+    const data = res.data;
+
+    if (data.status === 'already_registered') {
+      // Use textContent to prevent XSS
+      document.getElementById('already-msg').textContent = data.message;
+      show('screen-already');
+      return;
+    }
+
+    // Success
+    document.getElementById('confirm-progname').textContent = data.programName;
+    document.getElementById('confirm-number').textContent = data.participantCount;
+    show('screen-confirm');
+  }
+
+  init();
+</script>
+</body>
+</html>
