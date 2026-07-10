@@ -218,8 +218,7 @@
   const API = 'https://script.google.com/macros/s/AKfycbxfVUFnpLxR51o_Xfg0DTiyvrHi5AmDMwwWSeEbAh0ztZgsuarguQ5-bwz5Oki1027vAw/exec';
 
   let kpiData = null;
-  let facultyChart = null;
-  let semesterChart = null;
+  const charts = {};  // canvasId -> Chart instance
 
   async function loadKPI(btn) {
     document.getElementById('main-content').innerHTML = '<div class="spinner"></div>';
@@ -255,30 +254,45 @@
   function render(d) {
     const html = `
       <div class="kpi-grid" id="kpi-grid"></div>
+
+      <div class="card" style="margin-bottom:1.35rem">
+        <div class="card-title"><span class="dot"></span>Trend Penglibatan Mengikut Bulan</div>
+        <canvas id="chart-month" height="210"></canvas>
+      </div>
+
       <div class="charts-grid">
         <div class="card">
-          <div class="card-title"><span class="dot"></span>Penglibatan Mengikut Fakulti</div>
-          <canvas id="chart-faculty" height="260"></canvas>
+          <div class="card-title"><span class="dot"></span>Penglibatan Mengikut Tahun</div>
+          <canvas id="chart-year" height="240"></canvas>
         </div>
         <div class="card">
-          <div class="card-title"><span class="dot"></span>Penglibatan Mengikut Semester</div>
-          <canvas id="chart-semester" height="260"></canvas>
+          <div class="card-title"><span class="dot"></span>Penglibatan Mengikut Fakulti</div>
+          <canvas id="chart-faculty" height="240"></canvas>
         </div>
       </div>
-      <div class="card">
-        <div class="section-header">
-          <span class="section-title"><span class="dot"></span>Senarai Program</span>
-          <span style="font-size:0.8rem;color:var(--muted);font-weight:600">${d.programs.length} program</span>
+
+      <div class="charts-grid">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Penglibatan Mengikut Semester</div>
+          <canvas id="chart-semester" height="240"></canvas>
         </div>
-        <div id="programs-table"></div>
+        <div class="card">
+          <div class="section-header">
+            <span class="section-title"><span class="dot"></span>Senarai Program</span>
+            <span style="font-size:0.8rem;color:var(--muted);font-weight:600">${d.programs.length} program</span>
+          </div>
+          <div id="programs-table"></div>
+        </div>
       </div>
     `;
 
     document.getElementById('main-content').innerHTML = html;
 
     renderKPICards(d);
-    renderChart('chart-faculty', d.facultyBreakdown, 'Pelajar');
-    renderChart('chart-semester', d.semesterBreakdown, 'Pelajar');
+    renderChart('chart-month', d.monthBreakdown, 'Penyertaan', 'line');
+    renderChart('chart-year', d.yearBreakdown, 'Penyertaan', 'bar');
+    renderChart('chart-faculty', d.facultyBreakdown, 'Pelajar', 'bar');
+    renderChart('chart-semester', d.semesterBreakdown, 'Pelajar', 'bar');
     renderProgramsTable(d.programs);
   }
 
@@ -331,34 +345,49 @@
     });
   }
 
-  function renderChart(canvasId, breakdown, dataLabel) {
-    if (facultyChart && canvasId === 'chart-faculty') { facultyChart.destroy(); }
-    if (semesterChart && canvasId === 'chart-semester') { semesterChart.destroy(); }
+  function renderChart(canvasId, breakdown, dataLabel, type) {
+    if (charts[canvasId]) charts[canvasId].destroy();
+
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
 
     const labels = breakdown.map(r => r.label);
     const data   = breakdown.map(r => r.count);
 
-    const canvas = document.getElementById(canvasId);
     const ctxGrad = canvas.getContext('2d');
-    const grad = ctxGrad.createLinearGradient(0, 0, 0, 260);
+    const grad = ctxGrad.createLinearGradient(0, 0, 0, 240);
     grad.addColorStop(0, 'rgba(155,45,143,0.95)');
     grad.addColorStop(1, 'rgba(240,165,0,0.85)');
 
-    const chart = new Chart(canvas, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
+    const isLine = type === 'line';
+    const dataset = isLine
+      ? {
+          label: dataLabel,
+          data,
+          borderColor: '#9b2d8f',
+          backgroundColor: 'rgba(155,45,143,0.12)',
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.35,
+          pointBackgroundColor: '#9b2d8f',
+          pointRadius: 3,
+          pointHoverRadius: 5,
+        }
+      : {
           label: dataLabel,
           data,
           backgroundColor: grad,
           borderWidth: 0,
           borderRadius: 7,
           maxBarThickness: 46,
-        }],
-      },
+        };
+
+    charts[canvasId] = new Chart(canvas, {
+      type: isLine ? 'line' : 'bar',
+      data: { labels, datasets: [dataset] },
       options: {
         responsive: true,
+        maintainAspectRatio: true,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -370,20 +399,18 @@
             callbacks: {
               label: ctx => {
                 const row = breakdown[ctx.dataIndex];
-                return ctx.parsed.y + ' pelajar (' + row.pct + '%)';
+                const suffix = (row.pct !== undefined) ? ' (' + row.pct + '%)' : '';
+                return ctx.parsed.y + ' ' + dataLabel.toLowerCase() + suffix;
               },
             },
           },
         },
         scales: {
           x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 10 }, color: '#6b6478', maxRotation: 40 } },
-          y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Plus Jakarta Sans' }, color: '#6b6478' }, grid: { color: '#f0ecf3' } },
+          y: { beginAtZero: true, ticks: { precision: 0, font: { family: 'Plus Jakarta Sans' }, color: '#6b6478' }, grid: { color: '#f0ecf3' } },
         },
       },
     });
-
-    if (canvasId === 'chart-faculty') facultyChart = chart;
-    else semesterChart = chart;
   }
 
   function renderProgramsTable(programs) {
@@ -460,10 +487,15 @@
       ['Jumlah Populasi', kpiData.kpi1.totalPopulation],
       ['KPI 2 - Kedalaman Penglibatan (%)', kpiData.kpi2.value],
       ['Pelajar ≥2 Program', kpiData.kpi2.multiParticipants],
+      ['Jumlah Penyertaan', kpiData.totalParticipations],
       [],
-      ['=== PROGRAM ==='],
-      ['Nama', 'Tarikh', 'Anjuran', 'Pelajar', 'Status'],
-      ...kpiData.programs.map(p => [p.name, p.date, p.organizer, p.participantCount, p.status]),
+      ['=== BREAKDOWN TAHUN ==='],
+      ['Tahun', 'Penyertaan', '%'],
+      ...kpiData.yearBreakdown.map(r => [r.label, r.count, r.pct]),
+      [],
+      ['=== BREAKDOWN BULAN ==='],
+      ['Bulan', 'Penyertaan'],
+      ...kpiData.monthBreakdown.map(r => [r.label, r.count]),
       [],
       ['=== BREAKDOWN FAKULTI ==='],
       ['Fakulti', 'Pelajar', '%'],
@@ -472,6 +504,10 @@
       ['=== BREAKDOWN SEMESTER ==='],
       ['Semester', 'Pelajar', '%'],
       ...kpiData.semesterBreakdown.map(r => [r.label, r.count, r.pct]),
+      [],
+      ['=== PROGRAM ==='],
+      ['Nama', 'Tarikh', 'Anjuran', 'Pelajar', 'Status'],
+      ...kpiData.programs.map(p => [p.name, p.date, p.organizer, p.participantCount, p.status]),
     ];
 
     const csv = rows.map(row =>

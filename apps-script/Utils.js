@@ -88,6 +88,14 @@ function truncate(value) {
   return str.slice(0, MAX_FIELD_LENGTH);
 }
 
+// Robustly coerces a sheet cell (Date object or string) into a Date, or null
+function toDate(v) {
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+  if (v === null || v === undefined || v === '') return null;
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function getConfigValue(key) {
   const rows = sheetToObjects('Config');
   const row = rows.find(r => r.key === key);
