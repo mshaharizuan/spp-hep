@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard KPI — SPP UiTM</title>
+  <script src="auth.js"></script>
+  <script src="https://accounts.google.com/gsi/client" onload="initGIS()" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -161,6 +163,18 @@
     .spinner { text-align: center; color: #7b2d8b; padding: 2.5rem 0; font-size: 0.9rem; }
     .alert-error { background: #fdecea; color: #8a1c1c; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.88rem; }
 
+    #auth-wall {
+      position: fixed; inset: 0; background: rgba(240,244,248,0.97);
+      display: none; align-items: center; justify-content: center; z-index: 1000;
+    }
+    .auth-box {
+      background: #fff; border-radius: 12px; padding: 2rem; text-align: center;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.1); max-width: 340px; width: 100%;
+    }
+    .auth-box h2 { margin-bottom: 0.5rem; color: #1a1a2e; font-size: 1.1rem; }
+    .auth-box p { color: #666; font-size: 0.85rem; margin-bottom: 1.25rem; line-height: 1.5; }
+    #gsi-btn { display: flex; justify-content: center; }
+
     .section-header {
       display: flex;
       justify-content: space-between;
@@ -205,6 +219,7 @@
     try {
       const url = new URL(API);
       url.searchParams.set('action', 'getKPI');
+      url.searchParams.set('idToken', getAuthToken());
       const res = await fetch(url.toString(), { redirect: 'follow' });
       const json = await res.json();
 
@@ -454,7 +469,16 @@
     return d.innerHTML;
   }
 
-  loadKPI();
+  requireAuth(loadKPI);
 </script>
+
+<div id="auth-wall">
+  <div class="auth-box">
+    <div style="background:#7b2d8b;color:#fff;font-weight:700;font-size:0.8rem;padding:4px 12px;border-radius:6px;display:inline-block;margin-bottom:1rem;letter-spacing:1px">UiTM HEP</div>
+    <h2>Log Masuk Diperlukan</h2>
+    <p>Gunakan akaun Google UiTM anda untuk melihat Dashboard KPI.</p>
+    <div id="gsi-btn"></div>
+  </div>
+</div>
 </body>
 </html>
