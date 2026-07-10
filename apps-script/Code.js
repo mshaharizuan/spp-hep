@@ -8,7 +8,7 @@ function doGet(e) {
     const action = e.parameter.action;
 
     switch (action) {
-      case 'getProgram':    return jsonResponse(getProgram(e.parameter.pid));
+      case 'getProgram':    return jsonResponse(getProgram(e.parameter.pid, user.email));
       case 'getMyProfile':  return jsonResponse(getMyProfile(user.email));
       case 'getKPI':        return jsonResponse(getKPI(user.email));
       default:              return jsonError('Action tidak dikenali: ' + action);
@@ -27,7 +27,7 @@ function doPost(e) {
     const action = payload.action;
 
     switch (action) {
-      case 'getProgram':    return jsonResponse(getProgram(payload.pid));
+      case 'getProgram':    return jsonResponse(getProgram(payload.pid, user.email));
       case 'getMyProfile':  return jsonResponse(getMyProfile(user.email));
       case 'getKPI':        return jsonResponse(getKPI(user.email));
 

@@ -1,11 +1,27 @@
 // ─── Student endpoints ────────────────────────────────────────────────────────
 
-function getProgram(pid) {
+function getProgram(pid, email) {
   if (!pid) throw new Error('pid diperlukan');
 
   const programs = sheetToObjects('Programs');
   const program = programs.find(p => p.pid === pid);
   if (!program) throw new Error('Program tidak ditemui');
+
+  // Check ONLY the caller's own registration status for this program.
+  // (Never expose other registrants — this is the caller's own data.)
+  let alreadyRegistered = false;
+  let registeredAt = null;
+  if (email) {
+    const parts = sheetToObjects('Participation');
+    const mine = parts.find(
+      r => r.pid === pid && r.student_email &&
+           r.student_email.toLowerCase() === email.toLowerCase()
+    );
+    if (mine) {
+      alreadyRegistered = true;
+      registeredAt = formatDate(mine.timestamp);
+    }
+  }
 
   // Never return registrant list to students
   return {
@@ -14,6 +30,8 @@ function getProgram(pid) {
     date: program.date,
     organizer: program.organizer,
     status: program.status,
+    alreadyRegistered,
+    registeredAt,
   };
 }
 

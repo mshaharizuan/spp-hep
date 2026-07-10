@@ -513,6 +513,14 @@
       const prog = progRes.data;
       const profile = profileRes.data;
 
+      // Sudah berdaftar untuk program ini → papar masa direkod, sembunyikan borang
+      if (prog.alreadyRegistered) {
+        document.getElementById('already-msg').textContent =
+          'Anda telah berdaftar untuk "' + prog.name + '" pada ' + prog.registeredAt + '.';
+        show('screen-already');
+        return;
+      }
+
       if (prog.status !== 'open') {
         showError('Program ini telah ditutup dan tidak menerima pendaftaran baru.');
         return;
