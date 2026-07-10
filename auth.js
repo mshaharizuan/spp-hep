@@ -86,6 +86,20 @@ function clearAuth() {
   try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
 }
 
+/**
+ * Logs out the current user and reloads so the next student can sign in.
+ * disableAutoSelect() stops Google from silently re-picking the same account.
+ */
+function switchUser() {
+  clearAuth();
+  try {
+    if (window.google && google.accounts && google.accounts.id) {
+      google.accounts.id.disableAutoSelect();
+    }
+  } catch (e) { /* GIS not ready */ }
+  location.reload();
+}
+
 // Decodes the JWT payload (client-side, for display only — server re-verifies)
 function _decodeJwt(token) {
   try {

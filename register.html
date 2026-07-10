@@ -157,6 +157,23 @@
     button.btn:active { transform: translateY(0); }
     button.btn:disabled { filter: grayscale(0.4) brightness(0.9); cursor: wait; transform: none; box-shadow: none; }
 
+    button.btn-ghost {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 0.85rem;
+      background: #fff;
+      color: var(--brand);
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      transition: border-color 0.15s, background 0.15s, transform 0.15s;
+    }
+    button.btn-ghost:hover { border-color: var(--brand-2); background: #faf6fb; transform: translateY(-1px); }
+
     /* ── Alerts ── */
     .alert {
       padding: 0.8rem 0.95rem;
@@ -391,7 +408,10 @@
 
       <p class="notice">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        Log masuk Google UiTM diperlukan untuk pengesahan identiti.
+        <span id="logged-as"></span>
+      </p>
+      <p class="notice" style="margin-top:0.35rem">
+        <a href="#" onclick="switchUser(); return false;" style="color:var(--brand-2); font-weight:700; text-decoration:none">Bukan anda? Tukar akaun</a>
       </p>
     </div>
 
@@ -411,12 +431,20 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
           <span>Kehadiran anda telah direkodkan.</span>
         </div>
+        <button class="btn-ghost" onclick="switchUser()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 17l5-5-5-5M21 12H9M13 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8"/></svg>
+          Daftar Pelajar Lain / Log Keluar
+        </button>
       </div>
     </div>
 
     <!-- Already registered -->
     <div id="screen-already">
       <div class="alert alert-info" id="already-msg"></div>
+      <button class="btn-ghost" onclick="switchUser()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 17l5-5-5-5M21 12H9M13 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8"/></svg>
+        Daftar Pelajar Lain / Log Keluar
+      </button>
     </div>
 
     <!-- Error -->
@@ -489,6 +517,9 @@
         showError('Program ini telah ditutup dan tidak menerima pendaftaran baru.');
         return;
       }
+
+      // Show which account is logged in (textContent — XSS safe)
+      document.getElementById('logged-as').textContent = 'Log masuk sebagai ' + getUserEmail();
 
       // Render program card — textContent prevents XSS
       document.getElementById('prog-name').textContent = prog.name;
