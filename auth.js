@@ -6,7 +6,15 @@ let _pendingCallback = null;
 function requireAuth(callback) {
   if (_token) { callback(); return; }
   _pendingCallback = callback;
-  document.getElementById('auth-wall').style.display = 'flex';
+  const showWall = () => {
+    const wall = document.getElementById('auth-wall');
+    if (wall) wall.style.display = 'flex';
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', showWall);
+  } else {
+    showWall();
+  }
 }
 
 // Called by GIS script onload
