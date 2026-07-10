@@ -7,192 +7,200 @@
   <script src="auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" onload="initGIS()" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --brand: #6d1f6e;
+      --brand-2: #9b2d8f;
+      --brand-deep: #4a1350;
+      --accent: #f0a500;
+      --ink: #1c1526;
+      --muted: #6b6478;
+      --line: #ece7f0;
+      --ok: #1a8a52;
+      --ok-bg: #e7f7ee;
+      --err: #c0392b;
+      --err-bg: #fdecec;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f4f8;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      color: var(--ink);
       min-height: 100vh;
-      padding: 1.5rem;
+      padding: 1.75rem 1.5rem 3rem;
+      -webkit-font-smoothing: antialiased;
+      background:
+        radial-gradient(1000px 500px at 100% -5%, rgba(155,45,143,0.10), transparent 55%),
+        radial-gradient(800px 400px at -5% 0%, rgba(240,165,0,0.08), transparent 50%),
+        #f4f1f7;
     }
+
+    .wrap { max-width: 1120px; margin: 0 auto; }
 
     header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 2rem;
+      margin-bottom: 1.75rem;
       flex-wrap: wrap;
-      gap: 0.75rem;
+      gap: 0.9rem;
     }
-
     .brand { display: flex; align-items: center; gap: 0.75rem; }
     .brand-badge {
-      background: #7b2d8b;
-      color: #fff;
-      font-weight: 700;
-      font-size: 0.8rem;
-      padding: 4px 12px;
-      border-radius: 6px;
-      letter-spacing: 1px;
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--brand-deep), var(--brand-2));
+      color: #fff; font-weight: 800; font-size: 0.82rem;
+      display: grid; place-items: center; letter-spacing: 0.5px;
+      box-shadow: 0 8px 18px -8px rgba(109,31,110,0.6);
     }
+    h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-sub { font-size: 0.75rem; color: var(--muted); font-weight: 500; margin-top: 1px; }
 
-    h1 { font-size: 1.3rem; color: #1a1a2e; }
-
-    .header-actions { display: flex; gap: 0.75rem; align-items: center; }
-    .nav-link { font-size: 0.85rem; color: #7b2d8b; text-decoration: none; font-weight: 600; }
-    .nav-link:hover { text-decoration: underline; }
+    .header-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+    .nav-link {
+      font-size: 0.85rem; color: var(--brand); text-decoration: none; font-weight: 700;
+      padding: 0.55rem 1rem; border-radius: 10px; border: 1.5px solid var(--line); background: #fff;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .nav-link:hover { border-color: var(--brand-2); transform: translateY(-1px); }
 
     .btn {
-      padding: 0.55rem 1.1rem;
+      padding: 0.6rem 1.15rem;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 0.85rem;
-      font-weight: 600;
+      font-weight: 700;
+      font-family: inherit;
       cursor: pointer;
-      transition: background 0.2s, opacity 0.2s;
+      transition: transform 0.15s, filter 0.15s, border-color 0.15s, background 0.15s;
     }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-primary { background: #7b2d8b; color: #fff; }
-    .btn-primary:hover:not(:disabled) { background: #5e1f6e; }
-    .btn-outline { background: #fff; border: 1.5px solid #7b2d8b; color: #7b2d8b; }
-    .btn-outline:hover:not(:disabled) { background: #f5edf7; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff;
+      box-shadow: 0 10px 22px -12px rgba(109,31,110,0.7);
+    }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.06); }
+    .btn-outline { background: #fff; border: 1.5px solid var(--line); color: var(--brand); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--brand-2); background: #faf6fb; }
 
     /* KPI Cards */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1.1rem;
+      margin-bottom: 1.35rem;
     }
-
     .kpi-card {
+      position: relative;
       background: #fff;
-      border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-      border-left: 4px solid #7b2d8b;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.3rem 1.5rem;
+      box-shadow: 0 12px 30px -20px rgba(30,5,40,0.3);
+      overflow: hidden;
     }
-
+    .kpi-card::before {
+      content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: linear-gradient(180deg, var(--brand-2), var(--accent));
+    }
     .kpi-label {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 0.35rem;
+      font-size: 0.72rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 0.5rem;
     }
-
     .kpi-value {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #7b2d8b;
-      line-height: 1;
+      font-size: 2.1rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--brand-2), var(--brand));
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     }
-
-    .kpi-sub {
-      font-size: 0.78rem;
-      color: #aaa;
-      margin-top: 0.3rem;
-    }
+    .kpi-sub { font-size: 0.76rem; color: var(--muted); margin-top: 0.45rem; font-weight: 500; }
 
     /* Charts row */
     .charts-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.35rem; margin-bottom: 1.35rem;
     }
-
     @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
 
     .card {
       background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-      padding: 1.5rem;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px -20px rgba(30,5,40,0.28);
+      padding: 1.5rem 1.6rem;
     }
-
     .card-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #1a1a2e;
-      margin-bottom: 1.1rem;
-      padding-bottom: 0.65rem;
-      border-bottom: 2px solid #f0f4f8;
+      font-size: 0.95rem; font-weight: 800; margin-bottom: 1.2rem;
+      padding-bottom: 0.75rem; border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; gap: 0.55rem; letter-spacing: -0.01em;
     }
+    .card-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
 
     /* Program table */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
     th {
-      text-align: left;
-      padding: 0.5rem 0.75rem;
-      background: #f5edf7;
-      color: #5e1f6e;
-      font-weight: 700;
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
+      text-align: left; padding: 0.6rem 0.8rem;
+      background: #faf6fb; color: var(--brand);
+      font-weight: 700; font-size: 0.72rem;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--line);
     }
-
-    td {
-      padding: 0.65rem 0.75rem;
-      border-bottom: 1px solid #f0f4f8;
-      color: #333;
-      vertical-align: middle;
-    }
-
+    th:first-child { border-top-left-radius: 10px; }
+    th:last-child { border-top-right-radius: 10px; }
+    td { padding: 0.7rem 0.8rem; border-bottom: 1px solid var(--line); color: var(--ink); vertical-align: middle; font-weight: 500; }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #faf5fb; }
+    tbody tr:hover td { background: #faf5fb; }
 
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-size: 0.72rem;
-      font-weight: 700;
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; }
+    .badge-open   { background: var(--ok-bg); color: var(--ok); }
+    .badge-closed { background: #efeaf2; color: var(--muted); }
+
+    .spinner {
+      width: 32px; height: 32px; margin: 3rem auto;
+      border: 3px solid var(--line); border-top-color: var(--brand-2);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
     }
-    .badge-open   { background: #eafaf1; color: #1a6b3c; }
-    .badge-closed { background: #f0f4f8; color: #888; }
-
-    .spinner { text-align: center; color: #7b2d8b; padding: 2.5rem 0; font-size: 0.9rem; }
-    .alert-error { background: #fdecea; color: #8a1c1c; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.88rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .alert-error { background: var(--err-bg); color: var(--err); padding: 0.85rem 1rem; border-radius: 12px; font-size: 0.88rem; font-weight: 500; }
 
     #auth-wall {
-      position: fixed; inset: 0; background: rgba(240,244,248,0.97);
-      display: none; align-items: center; justify-content: center; z-index: 1000;
+      position: fixed; inset: 0; z-index: 1000;
+      display: none; align-items: center; justify-content: center; padding: 1.25rem;
+      background: rgba(28,10,34,0.55); backdrop-filter: blur(6px);
     }
     .auth-box {
-      background: #fff; border-radius: 12px; padding: 2rem; text-align: center;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.1); max-width: 340px; width: 100%;
+      background: #fff; border-radius: 20px; padding: 2.2rem 2rem; text-align: center;
+      box-shadow: 0 30px 70px -25px rgba(30,5,40,0.6); max-width: 340px; width: 100%;
     }
-    .auth-box h2 { margin-bottom: 0.5rem; color: #1a1a2e; font-size: 1.1rem; }
-    .auth-box p { color: #666; font-size: 0.85rem; margin-bottom: 1.25rem; line-height: 1.5; }
+    .auth-mark {
+      width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 1.1rem;
+      background: linear-gradient(135deg, var(--brand-deep), var(--brand-2));
+      display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 1.1rem;
+    }
+    .auth-box h2 { font-size: 1.15rem; font-weight: 800; margin-bottom: 0.45rem; }
+    .auth-box p { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.35rem; line-height: 1.55; }
     #gsi-btn { display: flex; justify-content: center; }
 
     .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.1rem;
-      padding-bottom: 0.65rem;
-      border-bottom: 2px solid #f0f4f8;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.2rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--line);
     }
-
-    .section-title { font-size: 0.95rem; font-weight: 700; color: #1a1a2e; }
+    .section-title { font-size: 0.95rem; font-weight: 800; display: flex; align-items: center; gap: 0.55rem; }
+    .section-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
   </style>
 </head>
 <body>
+<div class="wrap">
 
 <header>
   <div class="brand">
-    <span class="brand-badge">UiTM HEP</span>
-    <h1>Dashboard KPI</h1>
+    <span class="brand-badge">UiTM</span>
+    <div>
+      <h1>Dashboard KPI</h1>
+      <div class="brand-sub">Penglibatan Pelajar · Hal Ehwal Pelajar</div>
+    </div>
   </div>
   <div class="header-actions">
     <a class="nav-link" href="admin.html">← Admin Panel</a>
@@ -202,7 +210,8 @@
 </header>
 
 <div id="main-content">
-  <div class="spinner">Memuatkan data KPI...</div>
+  <div class="spinner"></div>
+</div>
 </div>
 
 <script>
@@ -213,7 +222,7 @@
   let semesterChart = null;
 
   async function loadKPI() {
-    document.getElementById('main-content').innerHTML = '<div class="spinner">Memuatkan data KPI...</div>';
+    document.getElementById('main-content').innerHTML = '<div class="spinner"></div>';
     document.getElementById('btn-export').disabled = true;
 
     try {
@@ -245,18 +254,18 @@
       <div class="kpi-grid" id="kpi-grid"></div>
       <div class="charts-grid">
         <div class="card">
-          <div class="card-title">Penglibatan Mengikut Fakulti</div>
+          <div class="card-title"><span class="dot"></span>Penglibatan Mengikut Fakulti</div>
           <canvas id="chart-faculty" height="260"></canvas>
         </div>
         <div class="card">
-          <div class="card-title">Penglibatan Mengikut Semester</div>
+          <div class="card-title"><span class="dot"></span>Penglibatan Mengikut Semester</div>
           <canvas id="chart-semester" height="260"></canvas>
         </div>
       </div>
       <div class="card">
         <div class="section-header">
-          <span class="section-title">Senarai Program</span>
-          <span style="font-size:0.8rem;color:#aaa">${d.programs.length} program</span>
+          <span class="section-title"><span class="dot"></span>Senarai Program</span>
+          <span style="font-size:0.8rem;color:var(--muted);font-weight:600">${d.programs.length} program</span>
         </div>
         <div id="programs-table"></div>
       </div>
@@ -326,17 +335,23 @@
     const labels = breakdown.map(r => r.label);
     const data   = breakdown.map(r => r.count);
 
-    const chart = new Chart(document.getElementById(canvasId), {
+    const canvas = document.getElementById(canvasId);
+    const ctxGrad = canvas.getContext('2d');
+    const grad = ctxGrad.createLinearGradient(0, 0, 0, 260);
+    grad.addColorStop(0, 'rgba(155,45,143,0.95)');
+    grad.addColorStop(1, 'rgba(240,165,0,0.85)');
+
+    const chart = new Chart(canvas, {
       type: 'bar',
       data: {
         labels,
         datasets: [{
           label: dataLabel,
           data,
-          backgroundColor: 'rgba(123, 45, 139, 0.7)',
-          borderColor: '#7b2d8b',
-          borderWidth: 1,
-          borderRadius: 5,
+          backgroundColor: grad,
+          borderWidth: 0,
+          borderRadius: 7,
+          maxBarThickness: 46,
         }],
       },
       options: {
@@ -344,6 +359,11 @@
         plugins: {
           legend: { display: false },
           tooltip: {
+            backgroundColor: '#2c1030',
+            padding: 10,
+            cornerRadius: 8,
+            titleFont: { family: 'Plus Jakarta Sans', weight: '700' },
+            bodyFont: { family: 'Plus Jakarta Sans' },
             callbacks: {
               label: ctx => {
                 const row = breakdown[ctx.dataIndex];
@@ -353,8 +373,8 @@
           },
         },
         scales: {
-          x: { ticks: { font: { size: 10 }, maxRotation: 40 } },
-          y: { beginAtZero: true, ticks: { stepSize: 1 } },
+          x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 10 }, color: '#6b6478', maxRotation: 40 } },
+          y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Plus Jakarta Sans' }, color: '#6b6478' }, grid: { color: '#f0ecf3' } },
         },
       },
     });
@@ -367,7 +387,7 @@
     const container = document.getElementById('programs-table');
 
     if (!programs.length) {
-      container.innerHTML = '<p style="color:#aaa;text-align:center;padding:1.5rem 0">Tiada program lagi.</p>';
+      container.innerHTML = '<p style="color:var(--muted);text-align:center;padding:1.5rem 0">Tiada program lagi.</p>';
       return;
     }
 
